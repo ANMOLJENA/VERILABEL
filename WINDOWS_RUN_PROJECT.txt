@@ -1,0 +1,172 @@
+VeriLabel - Windows Run Instructions
+====================================
+
+Use these exact steps on a Windows machine to run this project cleanly.
+
+Project folders
+---------------
+1. Backend:
+   \Users\...\verilabel\VeriLabel-backend
+
+2. Frontend:
+   \Users\...\verilabel\verilabel-frontend\Downloads\mini-frontend-main\mini-frontend-main
+
+
+Required software
+-----------------
+Install these first:
+
+1. Python 3.10 or newer
+   https://www.python.org/downloads/windows/
+   Important: enable "Add Python to PATH" during install.
+
+2. Node.js 20 or newer
+   https://nodejs.org/
+
+3. Ollama for Windows
+   https://ollama.com/download/windows
+
+4. glm-ocr model in Ollama
+   Run:
+   ollama pull glm-ocr:latest
+
+5. Optional for PDF OCR on Windows: Poppler
+   If you want PDF uploads to work reliably, install Poppler for Windows and note its bin path.
+   Example:
+   C:\Program Files\poppler\Library\bin
+
+
+Step 1 - Start Ollama
+---------------------
+Open Command Prompt or PowerShell and run:
+
+ollama serve
+
+Keep this window open.
+
+
+Step 2 - Configure backend env
+------------------------------
+Open a new Command Prompt in:
+
+VeriLabel-backend
+
+Copy the env template:
+
+copy .env.example .env
+
+Open .env and set:
+
+OPENROUTER_API_KEY=your_real_openrouter_key
+
+If Poppler is installed, also set:
+
+POPPLER_PATH=C:\Program Files\poppler\Library\bin
+
+
+Step 3 - Start backend
+----------------------
+Still inside VeriLabel-backend, run:
+
+scripts\start_server.bat
+
+What this does:
+- creates a virtual environment if missing
+- installs backend dependencies from requirements.txt
+- starts Flask on http://127.0.0.1:5000
+
+Backend health URL:
+
+http://127.0.0.1:5000/health
+
+
+Step 4 - Configure frontend env
+-------------------------------
+Open another Command Prompt in:
+
+verilabel-frontend\Downloads\mini-frontend-main\mini-frontend-main
+
+Copy the env template:
+
+copy .env.example .env
+
+Default value should already be correct:
+
+VITE_API_BASE_URL=http://127.0.0.1:5000
+
+Only change it if the backend is running on another port.
+
+
+Step 5 - Start frontend
+-----------------------
+In the frontend folder, run:
+
+npm install
+npm run dev
+
+Frontend URL:
+
+http://127.0.0.1:5173
+
+
+Normal startup order
+--------------------
+Always start in this order:
+
+1. ollama serve
+2. backend: scripts\start_server.bat
+3. frontend: npm run dev
+
+
+Quick checks
+------------
+1. Backend health:
+   http://127.0.0.1:5000/health
+
+2. Frontend:
+   http://127.0.0.1:5173
+
+3. Ollama models:
+   open a terminal and run:
+   curl http://127.0.0.1:11434/api/tags
+
+
+If something fails
+------------------
+1. If backend says port 5000 is busy:
+   - change PORT in VeriLabel-backend\.env
+   - change VITE_API_BASE_URL in frontend .env to match
+
+2. If PDF upload fails:
+   - install Poppler
+   - set POPPLER_PATH in backend .env
+
+3. If OCR fails:
+   - confirm Ollama is running
+   - confirm glm-ocr model exists:
+     ollama list
+
+4. If validation fails:
+   - check OPENROUTER_API_KEY in backend .env
+
+
+Minimal command summary
+-----------------------
+Backend:
+
+cd VeriLabel-backend
+copy .env.example .env
+scripts\start_server.bat
+
+Frontend:
+
+cd verilabel-frontend\Downloads\mini-frontend-main\mini-frontend-main
+copy .env.example .env
+npm install
+npm run dev
+
+
+Important note
+--------------
+Do not reuse Mac-created venv or node_modules on Windows.
+Install dependencies again on Windows using the commands above.

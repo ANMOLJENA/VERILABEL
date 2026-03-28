@@ -1,0 +1,861 @@
+{
+  "reference": {
+    "id": 2,
+    "name": "OXYCODONE",
+    "batch": "BN-2024-001I23",
+    "manufacturer": "PainRelief Corp",
+    "strength": "5mg",
+    "dosageForm": "—",
+    "mfgDate": "—",
+    "expDate": "01/15/2025",
+    "licenseNo": "—",
+    "composition": "biotin",
+    "storage": "—",
+    "warnings": "OCR errors in batch and expiry dates require interpretation; critical fields like dosage form, manufacturing date, and storage conditions are missing. Label indicates controlled substance but lacks complete information for validation.",
+    "marketedBy": "—",
+    "trustScore": 73,
+    "status": "verified",
+    "validatedAt": "2026-03-28T17:22:39.784400",
+    "ocrResultId": 4,
+    "documentId": 4,
+    "raw": {
+      "analysis_summary": "OCR errors in batch and expiry dates require interpretation; critical fields like dosage form, manufacturing date, and storage conditions are missing. Label indicates controlled substance but lacks complete information for validation.",
+      "batch_number": "BN-2024-001I23",
+      "composition_summary": "biotin",
+      "confidence_score": 73,
+      "document_id": 4,
+      "dosage_form": "",
+      "drug_name": "OXYCODONE",
+      "expiry_date": "01/15/2025",
+      "extracted_text": "CHALLENGING OCR SAMPLE\n\nDrug: 0XYCODONE 5mg (O vs 0)\nBatch: 8N-2024-001I23 (B vs 8, I vs I)\nExp: 0I/I5/2025 (0 vs O, 1 vs I)\nMfg: PainRelief Corp (I vs I)\n\nLot: G008I23 (G vs 6, O vs 0)\nNDC: 5432I-678-9O (I vs 1, O vs 0)\n\nCONTROLLED SUBSTANCE\nSchedule II (I vs I)",
+      "format_valid": false,
+      "id": 2,
+      "license_number": "",
+      "manufacturer": "PainRelief Corp",
+      "manufacturing_date": "",
+      "marketed_by": "",
+      "missing_fields": [
+        "manufacturing_date",
+        "license_number"
+      ],
+      "ocr_result_id": 4,
+      "package_type": "",
+      "prescription_required": true,
+      "raw_result": {
+        "analysis_summary": "OCR errors in batch and expiry dates require interpretation; critical fields like dosage form, manufacturing date, and storage conditions are missing. Label indicates controlled substance but lacks complete information for validation.",
+        "batch_number": "BN-2024-001I23",
+        "composition_summary": "biotin",
+        "confidence_score": 53,
+        "dosage_form": "",
+        "drug_name": "OXYCODONE",
+        "expiry_date": "01/15/2025",
+        "format_valid": false,
+        "license_number": "",
+        "manufacturer": "PainRelief Corp",
+        "manufacturing_date": "",
+        "marketed_by": "",
+        "missing_fields": [
+          "manufacturing_date",
+          "license_number"
+        ],
+        "package_type": "",
+        "prescription_required": true,
+        "risk_level": "HIGH",
+        "serialization_present": false,
+        "storage_conditions": "",
+        "strength": "5mg"
+      },
+      "risk_level": "HIGH",
+      "serialization_present": false,
+      "status": "verified",
+      "storage_conditions": "",
+      "strength": "5mg",
+      "validated_at": "2026-03-28T17:22:39.784400",
+      "verified_control_id": 1
+    }
+  },
+  "incoming": {
+    "id": 3,
+    "name": "ACETAMINOPHEN",
+    "batch": "BN-2024-001234",
+    "manufacturer": "PharmaCorpInc.",
+    "strength": "500mg",
+    "dosageForm": "tablet",
+    "mfgDate": "—",
+    "expDate": "12/12/2025",
+    "licenseNo": "—",
+    "composition": "—",
+    "storage": "—",
+    "warnings": "Label provides drug name, strength, batch number, expiry date, manufacturer, and controlled substance status. Manufacturing date, storage conditions, marketed by, license number, composition details, and package type are missing. Dosage form inferred from quantity. Absence of critical fields like manufacturing date and storage conditions, combined with controlled substance status, increases risk.",
+    "marketedBy": "—",
+    "trustScore": 63,
+    "status": "review",
+    "validatedAt": "2026-03-28T17:24:27.447269",
+    "ocrResultId": 5,
+    "documentId": 5,
+    "raw": {
+      "analysis_summary": "Label provides drug name, strength, batch number, expiry date, manufacturer, and controlled substance status. Manufacturing date, storage conditions, marketed by, license number, composition details, and package type are missing. Dosage form inferred from quantity. Absence of critical fields like manufacturing date and storage conditions, combined with controlled substance status, increases risk.",
+      "batch_number": "BN-2024-001234",
+      "composition_summary": "",
+      "confidence_score": 63,
+      "document_id": 5,
+      "dosage_form": "tablet",
+      "drug_name": "ACETAMINOPHEN",
+      "expiry_date": "12/12/2025",
+      "extracted_text": "PHARMACEUTICAL LABEL\n\nDrug Name: ACETAMINOPHEN 500mg\nBatch Number: BN-2024-001234\nExpiry Date: 12/12/2025\nManufacturer: PharmaCorpInc.\n\nNDC: 12345-678-90\nLot: L2024001\nQty: 30 tablets\n\nCONTROLLED SUBSTANCE\nSchedule II",
+      "format_valid": false,
+      "id": 3,
+      "license_number": null,
+      "manufacturer": "PharmaCorpInc.",
+      "manufacturing_date": "",
+      "marketed_by": "",
+      "missing_fields": [
+        "manufacturing_date",
+        "license_number"
+      ],
+      "ocr_result_id": 5,
+      "package_type": "",
+      "prescription_required": true,
+      "raw_result": {
+        "analysis_summary": "Label provides drug name, strength, batch number, expiry date, manufacturer, and controlled substance status. Manufacturing date, storage conditions, marketed by, license number, composition details, and package type are missing. Dosage form inferred from quantity. Absence of critical fields like manufacturing date and storage conditions, combined with controlled substance status, increases risk.",
+        "batch_number": "BN-2024-001234",
+        "composition_summary": "",
+        "confidence_score": 63,
+        "dosage_form": "tablet",
+        "drug_name": "ACETAMINOPHEN",
+        "expiry_date": "12/12/2025",
+        "format_valid": false,
+        "license_number": null,
+        "manufacturer": "PharmaCorpInc.",
+        "manufacturing_date": "",
+        "marketed_by": "",
+        "missing_fields": [
+          "manufacturing_date",
+          "license_number"
+        ],
+        "package_type": "",
+        "prescription_required": true,
+        "risk_level": "HIGH",
+        "serialization_present": false,
+        "storage_conditions": "",
+        "strength": "500mg"
+      },
+      "risk_level": "HIGH",
+      "serialization_present": false,
+      "status": "needs_review",
+      "storage_conditions": "",
+      "strength": "500mg",
+      "validated_at": "2026-03-28T17:24:27.447269",
+      "verified_control_id": null,
+      "comparison": {
+        "audit_hash": "7bbfbe0bed932c4d86aa67df808d21efe9cfb0dafa782ba14f4a5ef880f8def6",
+        "authenticity_score": 0,
+        "compared_at": "2026-03-28T17:24:27.454213",
+        "content_hash": "bb733dd1996ba959a0bcc7f7d04974093b3534b618eb7d698611de9214a7e0bf",
+        "deviations": [
+          {
+            "severity": "MINOR",
+            "type": "removed",
+            "word": "{\"drug_name\":"
+          },
+          {
+            "severity": "MINOR",
+            "type": "removed",
+            "word": "\"oxycodone\","
+          },
+          {
+            "severity": "MINOR",
+            "type": "removed",
+            "word": "\"strength\":"
+          },
+          {
+            "severity": "MINOR",
+            "type": "removed",
+            "word": "\"5mg\","
+          },
+          {
+            "severity": "MINOR",
+            "type": "removed",
+            "word": "\"dosage_form\":"
+          },
+          {
+            "severity": "MINOR",
+            "type": "removed",
+            "word": "\"\","
+          },
+          {
+            "severity": "MINOR",
+            "type": "removed",
+            "word": "\"batch_number\":"
+          },
+          {
+            "severity": "MINOR",
+            "type": "added",
+            "word": "pharmaceutical"
+          },
+          {
+            "severity": "MINOR",
+            "type": "added",
+            "word": "label"
+          },
+          {
+            "severity": "MINOR",
+            "type": "added",
+            "word": "drug"
+          },
+          {
+            "severity": "MINOR",
+            "type": "added",
+            "word": "name:"
+          },
+          {
+            "severity": "MINOR",
+            "type": "added",
+            "word": "acetaminophen"
+          },
+          {
+            "severity": "MINOR",
+            "type": "added",
+            "word": "500mg"
+          },
+          {
+            "severity": "MINOR",
+            "type": "added",
+            "word": "batch"
+          },
+          {
+            "severity": "MINOR",
+            "type": "added",
+            "word": "number:"
+          },
+          {
+            "severity": "MINOR",
+            "type": "removed",
+            "word": "\"bn-2024-001i23\","
+          },
+          {
+            "severity": "MINOR",
+            "type": "added",
+            "word": "bn-2024-001234"
+          },
+          {
+            "severity": "MINOR",
+            "type": "added",
+            "word": "expiry"
+          },
+          {
+            "severity": "MINOR",
+            "type": "added",
+            "word": "date:"
+          },
+          {
+            "severity": "MINOR",
+            "type": "added",
+            "word": "12/12/2025"
+          },
+          {
+            "severity": "MINOR",
+            "type": "removed",
+            "word": "\"manufacturing_date\":"
+          },
+          {
+            "severity": "MINOR",
+            "type": "removed",
+            "word": "\"expiry_date\":"
+          },
+          {
+            "severity": "MINOR",
+            "type": "removed",
+            "word": "\"01/15/2025\","
+          },
+          {
+            "severity": "MINOR",
+            "type": "removed",
+            "word": "\"manufacturer\":"
+          },
+          {
+            "severity": "MINOR",
+            "type": "added",
+            "word": "manufacturer:"
+          },
+          {
+            "severity": "MINOR",
+            "type": "removed",
+            "word": "\"painrelief"
+          },
+          {
+            "severity": "MINOR",
+            "type": "removed",
+            "word": "corp\","
+          },
+          {
+            "severity": "MINOR",
+            "type": "removed",
+            "word": "\"marketed_by\":"
+          },
+          {
+            "severity": "MINOR",
+            "type": "removed",
+            "word": "\"license_number\":"
+          },
+          {
+            "severity": "MINOR",
+            "type": "removed",
+            "word": "\"package_type\":"
+          },
+          {
+            "severity": "MINOR",
+            "type": "removed",
+            "word": "\"composition_summary\":"
+          },
+          {
+            "severity": "MINOR",
+            "type": "removed",
+            "word": "\"storage_conditions\":"
+          },
+          {
+            "severity": "MINOR",
+            "type": "removed",
+            "word": "\"\"}"
+          },
+          {
+            "severity": "MINOR",
+            "type": "added",
+            "word": "pharmacorpinc."
+          },
+          {
+            "severity": "MINOR",
+            "type": "added",
+            "word": "ndc:"
+          },
+          {
+            "severity": "MINOR",
+            "type": "added",
+            "word": "12345-678-90"
+          },
+          {
+            "severity": "MINOR",
+            "type": "added",
+            "word": "lot:"
+          },
+          {
+            "severity": "MINOR",
+            "type": "added",
+            "word": "l2024001"
+          },
+          {
+            "severity": "MINOR",
+            "type": "added",
+            "word": "qty:"
+          },
+          {
+            "severity": "MINOR",
+            "type": "added",
+            "word": "30"
+          },
+          {
+            "severity": "MINOR",
+            "type": "added",
+            "word": "tablets"
+          },
+          {
+            "severity": "MINOR",
+            "type": "added",
+            "word": "controlled"
+          },
+          {
+            "severity": "MINOR",
+            "type": "added",
+            "word": "substance"
+          },
+          {
+            "severity": "MINOR",
+            "type": "added",
+            "word": "schedule"
+          },
+          {
+            "severity": "MINOR",
+            "type": "added",
+            "word": "ii"
+          }
+        ],
+        "final_decision": "VALID",
+        "id": 1,
+        "match_percentage": 0,
+        "ocr_result_id": 5,
+        "status": "PASS",
+        "submitter_ip": "127.0.0.1",
+        "validation_result_id": 3,
+        "verified_control_id": 1
+      }
+    }
+  },
+  "comparison": {
+    "audit_hash": "7bbfbe0bed932c4d86aa67df808d21efe9cfb0dafa782ba14f4a5ef880f8def6",
+    "authenticity_score": 0,
+    "compared_at": "2026-03-28T17:24:27.454213",
+    "content_hash": "bb733dd1996ba959a0bcc7f7d04974093b3534b618eb7d698611de9214a7e0bf",
+    "deviations": [
+      {
+        "severity": "MINOR",
+        "type": "removed",
+        "word": "{\"drug_name\":"
+      },
+      {
+        "severity": "MINOR",
+        "type": "removed",
+        "word": "\"oxycodone\","
+      },
+      {
+        "severity": "MINOR",
+        "type": "removed",
+        "word": "\"strength\":"
+      },
+      {
+        "severity": "MINOR",
+        "type": "removed",
+        "word": "\"5mg\","
+      },
+      {
+        "severity": "MINOR",
+        "type": "removed",
+        "word": "\"dosage_form\":"
+      },
+      {
+        "severity": "MINOR",
+        "type": "removed",
+        "word": "\"\","
+      },
+      {
+        "severity": "MINOR",
+        "type": "removed",
+        "word": "\"batch_number\":"
+      },
+      {
+        "severity": "MINOR",
+        "type": "added",
+        "word": "pharmaceutical"
+      },
+      {
+        "severity": "MINOR",
+        "type": "added",
+        "word": "label"
+      },
+      {
+        "severity": "MINOR",
+        "type": "added",
+        "word": "drug"
+      },
+      {
+        "severity": "MINOR",
+        "type": "added",
+        "word": "name:"
+      },
+      {
+        "severity": "MINOR",
+        "type": "added",
+        "word": "acetaminophen"
+      },
+      {
+        "severity": "MINOR",
+        "type": "added",
+        "word": "500mg"
+      },
+      {
+        "severity": "MINOR",
+        "type": "added",
+        "word": "batch"
+      },
+      {
+        "severity": "MINOR",
+        "type": "added",
+        "word": "number:"
+      },
+      {
+        "severity": "MINOR",
+        "type": "removed",
+        "word": "\"bn-2024-001i23\","
+      },
+      {
+        "severity": "MINOR",
+        "type": "added",
+        "word": "bn-2024-001234"
+      },
+      {
+        "severity": "MINOR",
+        "type": "added",
+        "word": "expiry"
+      },
+      {
+        "severity": "MINOR",
+        "type": "added",
+        "word": "date:"
+      },
+      {
+        "severity": "MINOR",
+        "type": "added",
+        "word": "12/12/2025"
+      },
+      {
+        "severity": "MINOR",
+        "type": "removed",
+        "word": "\"manufacturing_date\":"
+      },
+      {
+        "severity": "MINOR",
+        "type": "removed",
+        "word": "\"expiry_date\":"
+      },
+      {
+        "severity": "MINOR",
+        "type": "removed",
+        "word": "\"01/15/2025\","
+      },
+      {
+        "severity": "MINOR",
+        "type": "removed",
+        "word": "\"manufacturer\":"
+      },
+      {
+        "severity": "MINOR",
+        "type": "added",
+        "word": "manufacturer:"
+      },
+      {
+        "severity": "MINOR",
+        "type": "removed",
+        "word": "\"painrelief"
+      },
+      {
+        "severity": "MINOR",
+        "type": "removed",
+        "word": "corp\","
+      },
+      {
+        "severity": "MINOR",
+        "type": "removed",
+        "word": "\"marketed_by\":"
+      },
+      {
+        "severity": "MINOR",
+        "type": "removed",
+        "word": "\"license_number\":"
+      },
+      {
+        "severity": "MINOR",
+        "type": "removed",
+        "word": "\"package_type\":"
+      },
+      {
+        "severity": "MINOR",
+        "type": "removed",
+        "word": "\"composition_summary\":"
+      },
+      {
+        "severity": "MINOR",
+        "type": "removed",
+        "word": "\"storage_conditions\":"
+      },
+      {
+        "severity": "MINOR",
+        "type": "removed",
+        "word": "\"\"}"
+      },
+      {
+        "severity": "MINOR",
+        "type": "added",
+        "word": "pharmacorpinc."
+      },
+      {
+        "severity": "MINOR",
+        "type": "added",
+        "word": "ndc:"
+      },
+      {
+        "severity": "MINOR",
+        "type": "added",
+        "word": "12345-678-90"
+      },
+      {
+        "severity": "MINOR",
+        "type": "added",
+        "word": "lot:"
+      },
+      {
+        "severity": "MINOR",
+        "type": "added",
+        "word": "l2024001"
+      },
+      {
+        "severity": "MINOR",
+        "type": "added",
+        "word": "qty:"
+      },
+      {
+        "severity": "MINOR",
+        "type": "added",
+        "word": "30"
+      },
+      {
+        "severity": "MINOR",
+        "type": "added",
+        "word": "tablets"
+      },
+      {
+        "severity": "MINOR",
+        "type": "added",
+        "word": "controlled"
+      },
+      {
+        "severity": "MINOR",
+        "type": "added",
+        "word": "substance"
+      },
+      {
+        "severity": "MINOR",
+        "type": "added",
+        "word": "schedule"
+      },
+      {
+        "severity": "MINOR",
+        "type": "added",
+        "word": "ii"
+      }
+    ],
+    "final_decision": "VALID",
+    "id": 1,
+    "match_percentage": 0,
+    "ocr_result_id": 5,
+    "status": "PASS",
+    "submitter_ip": "127.0.0.1",
+    "validation_result_id": 3,
+    "verified_control_id": 1
+  },
+  "deviations": [
+    {
+      "severity": "MINOR",
+      "type": "removed",
+      "word": "{\"drug_name\":"
+    },
+    {
+      "severity": "MINOR",
+      "type": "removed",
+      "word": "\"oxycodone\","
+    },
+    {
+      "severity": "MINOR",
+      "type": "removed",
+      "word": "\"strength\":"
+    },
+    {
+      "severity": "MINOR",
+      "type": "removed",
+      "word": "\"5mg\","
+    },
+    {
+      "severity": "MINOR",
+      "type": "removed",
+      "word": "\"dosage_form\":"
+    },
+    {
+      "severity": "MINOR",
+      "type": "removed",
+      "word": "\"\","
+    },
+    {
+      "severity": "MINOR",
+      "type": "removed",
+      "word": "\"batch_number\":"
+    },
+    {
+      "severity": "MINOR",
+      "type": "added",
+      "word": "pharmaceutical"
+    },
+    {
+      "severity": "MINOR",
+      "type": "added",
+      "word": "label"
+    },
+    {
+      "severity": "MINOR",
+      "type": "added",
+      "word": "drug"
+    },
+    {
+      "severity": "MINOR",
+      "type": "added",
+      "word": "name:"
+    },
+    {
+      "severity": "MINOR",
+      "type": "added",
+      "word": "acetaminophen"
+    },
+    {
+      "severity": "MINOR",
+      "type": "added",
+      "word": "500mg"
+    },
+    {
+      "severity": "MINOR",
+      "type": "added",
+      "word": "batch"
+    },
+    {
+      "severity": "MINOR",
+      "type": "added",
+      "word": "number:"
+    },
+    {
+      "severity": "MINOR",
+      "type": "removed",
+      "word": "\"bn-2024-001i23\","
+    },
+    {
+      "severity": "MINOR",
+      "type": "added",
+      "word": "bn-2024-001234"
+    },
+    {
+      "severity": "MINOR",
+      "type": "added",
+      "word": "expiry"
+    },
+    {
+      "severity": "MINOR",
+      "type": "added",
+      "word": "date:"
+    },
+    {
+      "severity": "MINOR",
+      "type": "added",
+      "word": "12/12/2025"
+    },
+    {
+      "severity": "MINOR",
+      "type": "removed",
+      "word": "\"manufacturing_date\":"
+    },
+    {
+      "severity": "MINOR",
+      "type": "removed",
+      "word": "\"expiry_date\":"
+    },
+    {
+      "severity": "MINOR",
+      "type": "removed",
+      "word": "\"01/15/2025\","
+    },
+    {
+      "severity": "MINOR",
+      "type": "removed",
+      "word": "\"manufacturer\":"
+    },
+    {
+      "severity": "MINOR",
+      "type": "added",
+      "word": "manufacturer:"
+    },
+    {
+      "severity": "MINOR",
+      "type": "removed",
+      "word": "\"painrelief"
+    },
+    {
+      "severity": "MINOR",
+      "type": "removed",
+      "word": "corp\","
+    },
+    {
+      "severity": "MINOR",
+      "type": "removed",
+      "word": "\"marketed_by\":"
+    },
+    {
+      "severity": "MINOR",
+      "type": "removed",
+      "word": "\"license_number\":"
+    },
+    {
+      "severity": "MINOR",
+      "type": "removed",
+      "word": "\"package_type\":"
+    },
+    {
+      "severity": "MINOR",
+      "type": "removed",
+      "word": "\"composition_summary\":"
+    },
+    {
+      "severity": "MINOR",
+      "type": "removed",
+      "word": "\"storage_conditions\":"
+    },
+    {
+      "severity": "MINOR",
+      "type": "removed",
+      "word": "\"\"}"
+    },
+    {
+      "severity": "MINOR",
+      "type": "added",
+      "word": "pharmacorpinc."
+    },
+    {
+      "severity": "MINOR",
+      "type": "added",
+      "word": "ndc:"
+    },
+    {
+      "severity": "MINOR",
+      "type": "added",
+      "word": "12345-678-90"
+    },
+    {
+      "severity": "MINOR",
+      "type": "added",
+      "word": "lot:"
+    },
+    {
+      "severity": "MINOR",
+      "type": "added",
+      "word": "l2024001"
+    },
+    {
+      "severity": "MINOR",
+      "type": "added",
+      "word": "qty:"
+    },
+    {
+      "severity": "MINOR",
+      "type": "added",
+      "word": "30"
+    },
+    {
+      "severity": "MINOR",
+      "type": "added",
+      "word": "tablets"
+    },
+    {
+      "severity": "MINOR",
+      "type": "added",
+      "word": "controlled"
+    },
+    {
+      "severity": "MINOR",
+      "type": "added",
+      "word": "substance"
+    },
+    {
+      "severity": "MINOR",
+      "type": "added",
+      "word": "schedule"
+    },
+    {
+      "severity": "MINOR",
+      "type": "added",
+      "word": "ii"
+    }
+  ]
+}
