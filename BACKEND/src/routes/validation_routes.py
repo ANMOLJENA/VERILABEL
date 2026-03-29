@@ -264,7 +264,6 @@ def validate_with_reasoning():
         logger.exception("Unexpected error in validate_with_reasoning")
         return jsonify({"error": "Internal server error"}), 500
 
-
 @validation_bp.route("/latest", methods=["GET"])
 def latest_validation_results():
     """
@@ -279,6 +278,10 @@ def latest_validation_results():
 
         rows = (
             ValidationResult.query
+            .filter(
+                (ValidationResult.is_comparison_only == False) |
+                (ValidationResult.is_comparison_only.is_(None))
+            )
             .order_by(ValidationResult.validated_at.desc(), ValidationResult.id.desc())
             .limit(limit)
             .all()

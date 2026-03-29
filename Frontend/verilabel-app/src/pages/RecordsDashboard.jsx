@@ -176,7 +176,9 @@ function handleCompare(record) {
         const latestRows = await getLatestValidationRecords(100);
         console.log("LATEST VALIDATION ROWS:", latestRows);
 
-        const mapped = latestRows.map(mapRecord);
+        const mapped = latestRows
+        .filter((row) => !row?.is_comparison_only)
+        .map(mapRecord);
 
         if (!isMounted) {
           return;

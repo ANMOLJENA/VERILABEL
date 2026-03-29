@@ -17,6 +17,9 @@ class Document(db.Model):
     file_size = db.Column(db.Integer)
     uploaded_at = db.Column(db.DateTime, default=datetime.utcnow)
 
+    # NEW: mark temporary comparison uploads
+    is_comparison_only = db.Column(db.Boolean, default=False, nullable=False)
+
     # Relationships
     ocr_results = db.relationship(
         "OCRResult",
@@ -39,6 +42,7 @@ class Document(db.Model):
             "file_type": self.file_type,
             "file_size": self.file_size,
             "uploaded_at": self.uploaded_at.isoformat(),
+            "is_comparison_only": self.is_comparison_only,
         }
 
 
@@ -66,6 +70,9 @@ class OCRResult(db.Model):
     processing_time = db.Column(db.Float)
     processed_at = db.Column(db.DateTime, default=datetime.utcnow)
 
+    # NEW
+    is_comparison_only = db.Column(db.Boolean, default=False, nullable=False)
+
     document = db.relationship("Document", back_populates="ocr_results")
 
     validation_results = db.relationship(
@@ -85,6 +92,7 @@ class OCRResult(db.Model):
             "model_name": self.model_name,
             "processing_time": self.processing_time,
             "processed_at": self.processed_at.isoformat(),
+            "is_comparison_only": self.is_comparison_only,
         }
 
 
@@ -105,7 +113,6 @@ class VerifiedControl(db.Model):
         index=True,
     )
 
-    # NEW: link verified control back to the validation result it came from
     source_validation_result_id = db.Column(
         db.Integer,
         db.ForeignKey("validation_results.id", ondelete="SET NULL"),
@@ -115,7 +122,7 @@ class VerifiedControl(db.Model):
 
     verified_text = db.Column(db.Text, nullable=False)
 
-    status = db.Column(db.String(50), default="verified")  # keep as-is
+    status = db.Column(db.String(50), default="verified")
     approved_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     source_document = db.relationship(
@@ -123,20 +130,45 @@ class VerifiedControl(db.Model):
         back_populates="verified_controls"
     )
 
-    # NEW
     source_validation_result = db.relationship(
         "ValidationResult",
         back_populates="verified_control"
     )
 
     def to_dict(self):
+        source_validation = self.source_validation_result
+
         return {
             "id": self.id,
             "control_name": self.control_name,
             "verified_text": self.verified_text,
             "status": self.status,
             "approved_at": self.approved_at.isoformat(),
+            "source_document_id": self.source_document_id,
             "source_validation_result_id": self.source_validation_result_id,
+
+            # expose structured verified fields for comparison UI + service
+            "drug_name": source_validation.drug_name if source_validation else None,
+            "strength": source_validation.strength if source_validation else None,
+            "dosage_form": source_validation.dosage_form if source_validation else None,
+            "batch_number": source_validation.batch_number if source_validation else None,
+            "manufacturing_date": source_validation.manufacturing_date if source_validation else None,
+            "expiry_date": source_validation.expiry_date if source_validation else None,
+            "manufacturer": source_validation.manufacturer if source_validation else None,
+            "marketed_by": source_validation.marketed_by if source_validation else None,
+            "license_number": source_validation.license_number if source_validation else None,
+            "storage_conditions": source_validation.storage_conditions if source_validation else None,
+            "composition_summary": source_validation.composition_summary if source_validation else None,
+            "package_type": source_validation.package_type if source_validation else None,
+            "prescription_required": source_validation.prescription_required if source_validation else None,
+            "serialization_present": source_validation.serialization_present if source_validation else None,
+            "missing_fields": json.loads(source_validation.missing_fields) if source_validation and source_validation.missing_fields else [],
+            "format_valid": source_validation.format_valid if source_validation else None,
+            "risk_level": source_validation.risk_level if source_validation else None,
+            "confidence_score": source_validation.confidence_score if source_validation else 0,
+            "analysis_summary": source_validation.analysis_summary if source_validation else None,
+            "validated_at": source_validation.validated_at.isoformat() if source_validation and source_validation.validated_at else None,
+            "ocr_result_id": source_validation.ocr_result_id if source_validation else None,
         }
 
 
@@ -149,7 +181,6 @@ class ComparisonResult(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
 
-    # ✅ Reference (Verified Data)
     verified_control_id = db.Column(
         db.Integer,
         db.ForeignKey("verified_controls.id", ondelete="CASCADE"),
@@ -157,7 +188,6 @@ class ComparisonResult(db.Model):
         index=True,
     )
 
-    # ✅ New Input (RAW)
     ocr_result_id = db.Column(
         db.Integer,
         db.ForeignKey("ocr_results.id", ondelete="CASCADE"),
@@ -165,7 +195,6 @@ class ComparisonResult(db.Model):
         index=True,
     )
 
-    # ✅ 🔥 NEW: Structured Validated Data (CORE FIX)
     validation_result_id = db.Column(
         db.Integer,
         db.ForeignKey("validation_results.id", ondelete="CASCADE"),
@@ -173,45 +202,20 @@ class ComparisonResult(db.Model):
         index=True,
     )
 
-    # ============================================================
-    # COMPARISON METRICS
-    # ============================================================
-
     match_percentage = db.Column(db.Float, default=0.0)
-
-    # Store full deviation report as JSON string
     deviations = db.Column(db.Text, default="[]")
-
-    # PASS / FAIL
     status = db.Column(db.String(50))
-
-    # FINAL CLASSIFICATION (CRITICAL / MODERATE / MINOR)
     final_decision = db.Column(db.String(50))
-
-    # Authenticity score (0–100)
     authenticity_score = db.Column(db.Integer, default=0)
 
-    # ============================================================
-    # AUDIT & SECURITY
-    # ============================================================
-
     compared_at = db.Column(db.DateTime, default=datetime.utcnow)
-
     audit_hash = db.Column(db.String(64))
     content_hash = db.Column(db.String(64))
     submitter_ip = db.Column(db.String(45))
 
-    # ============================================================
-    # RELATIONSHIPS (OPTIONAL BUT CLEAN)
-    # ============================================================
-
     verified_control = db.relationship("VerifiedControl")
     ocr_result = db.relationship("OCRResult")
     validation_result = db.relationship("ValidationResult")
-
-    # ============================================================
-    # SERIALIZER
-    # ============================================================
 
     def to_dict(self):
         return {
@@ -232,7 +236,7 @@ class ComparisonResult(db.Model):
 
 
 # ============================================================
-# VALIDATION RESULT (FIXED VERSION 🚀)
+# VALIDATION RESULT
 # ============================================================
 
 class ValidationResult(db.Model):
@@ -254,7 +258,6 @@ class ValidationResult(db.Model):
 
     extracted_text = db.Column(db.Text, nullable=False)
 
-    # Extracted Fields
     drug_name = db.Column(db.String(255))
     strength = db.Column(db.String(100))
     dosage_form = db.Column(db.String(120))
@@ -275,26 +278,25 @@ class ValidationResult(db.Model):
     format_valid = db.Column(db.Boolean, default=True)
     risk_level = db.Column(db.String(20), default="MEDIUM")
 
-    # 🔥 CORE FIXES
     confidence_score = db.Column(db.Integer, default=0)
-    status = db.Column(db.String(50), default="needs_review")  # NEW FIELD
+    status = db.Column(db.String(50), default="needs_review")
 
     analysis_summary = db.Column(db.Text)
     raw_result = db.Column(db.Text)
 
     validated_at = db.Column(db.DateTime, default=datetime.utcnow)
 
-    # Relationship
+    # NEW
+    is_comparison_only = db.Column(db.Boolean, default=False, nullable=False)
+
     ocr_result = db.relationship("OCRResult", back_populates="validation_results")
 
-    # NEW: link to verified_controls
     verified_control = db.relationship(
         "VerifiedControl",
         back_populates="source_validation_result",
         uselist=False,
     )
 
-    # 🔥 AUTO STATUS UPDATE METHOD
     def update_status(self):
         if self.confidence_score >= 70:
             self.status = "verified"
@@ -326,8 +328,9 @@ class ValidationResult(db.Model):
             "format_valid": self.format_valid,
             "risk_level": self.risk_level,
             "confidence_score": self.confidence_score,
-            "status": self.status,  # 🔥 IMPORTANT
+            "status": self.status,
             "analysis_summary": self.analysis_summary,
             "raw_result": json.loads(self.raw_result) if self.raw_result else {},
             "validated_at": self.validated_at.isoformat(),
+            "is_comparison_only": self.is_comparison_only,
         }

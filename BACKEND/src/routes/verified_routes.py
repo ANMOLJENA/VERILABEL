@@ -1,7 +1,6 @@
 from flask import Blueprint, request, jsonify
 from configration.database import db
-from models.database import VerifiedControl, OCRResult ,ValidationResult
-import json
+from models.database import VerifiedControl, OCRResult, ValidationResult
 
 bp = Blueprint("verified", __name__, url_prefix="/api/verified")
 
@@ -17,7 +16,6 @@ def create_verified_control(ocr_result_id):
     try:
         ocr_result = OCRResult.query.get_or_404(ocr_result_id)
 
-        # 🔥 GET LATEST VALIDATION RESULT FOR THIS OCR
         validation = (
             ValidationResult.query
             .filter_by(ocr_result_id=ocr_result.id)
@@ -31,7 +29,7 @@ def create_verified_control(ocr_result_id):
                 "error": "No validation result found for this OCR result"
             }), 400
 
-        data = request.get_json()
+        data = request.get_json() or {}
         control_name = (data.get("control_name") or "").strip()
         status = (data.get("status") or "verified").strip().lower()
         verified_text = data.get("verified_text")
@@ -45,15 +43,25 @@ def create_verified_control(ocr_result_id):
                 "error": "status must be 'verified' or 'rejected'"
             }), 400
 
+        # IMPORTANT FIX:
+        # Always store plain trusted text, not dumped JSON.
+        trusted_text = (
+            (verified_text or "").strip()
+            if isinstance(verified_text, str)
+            else (validation.extracted_text or ocr_result.extracted_text or "").strip()
+        )
+
+        if not trusted_text:
+            return jsonify({
+                "success": False,
+                "error": "Unable to determine verified_text"
+            }), 400
+
         verified = VerifiedControl(
             control_name=control_name,
             source_document_id=ocr_result.document_id,
-            source_validation_result_id=validation.id,  # 🔥 THIS IS THE FIX
-            verified_text=(
-                json.dumps(verified_text)
-                if isinstance(verified_text, dict)
-                else (verified_text or ocr_result.translated_text)
-            ),
+            source_validation_result_id=validation.id,
+            verified_text=trusted_text,
             status=status,
         )
 
@@ -65,6 +73,7 @@ def create_verified_control(ocr_result_id):
     except Exception as e:
         db.session.rollback()
         return jsonify({"success": False, "error": str(e)}), 500
+
 
 # ====================================================
 # List Verified Controls (Paginated)
@@ -116,7 +125,7 @@ def update_verified_control(control_id):
 
     try:
         control = VerifiedControl.query.get_or_404(control_id)
-        data = request.get_json()
+        data = request.get_json() or {}
 
         if "control_name" in data:
             new_name = (data.get("control_name") or "").strip()

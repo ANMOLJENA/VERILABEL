@@ -21,6 +21,21 @@ const fields = [
   { key: "marketedBy", label: "Marketed By" },
 ];
 
+const fieldKeyMap = {
+  name: ["drug_name"],
+  batch: ["batch_number"],
+  manufacturer: ["manufacturer"],
+  strength: ["strength"],
+  dosageForm: ["dosage_form"],
+  mfgDate: ["manufacturing_date"],
+  expDate: ["expiry_date"],
+  licenseNo: ["license_number"],
+  composition: ["composition", "composition_summary"],
+  storage: ["storage", "storage_conditions"],
+  warnings: ["analysis_summary"],
+  marketedBy: ["marketed_by"],
+};
+
 const statusConfig = {
   verified: {
     label: "Verified",
@@ -43,16 +58,24 @@ const statusConfig = {
 };
 
 function normalizeStatus(status) {
-  if (status === "verified") {
+  if (status === "PASS" || status === "verified") {
     return "verified";
   }
-  if (status === "needs_review" || status === "review" || status === "SUSPICIOUS") {
+
+  if (
+    status === "REJECT" ||
+    status === "FAIL" ||
+    status === "rejected" ||
+    status === "SUSPICIOUS"
+  ) {
+    return "rejected";
+  }
+
+  if (status === "needs_review" || status === "review") {
     return "review";
   }
-  if (status === "PASS") {
-    return "verified";
-  }
-  return "rejected";
+
+  return "review";
 }
 
 function safeValue(value, fallback = "—") {
@@ -121,13 +144,16 @@ function parseDeviationList(deviations) {
 }
 
 function getDeviationByField(deviations, fieldKey) {
-  return deviations.find((item) => item.field === fieldKey || item.key === fieldKey) || null;
+  const backendKeys = fieldKeyMap[fieldKey] || [fieldKey];
+  return (
+    deviations.find((item) => backendKeys.includes(item.field) || item.key === fieldKey) || null
+  );
 }
 
 function mapReferenceRecord(rawData) {
   return {
     id: rawData?.id || null,
-    name: safeValue(rawData?.drug_name, "Unidentified medicine"),
+    name: safeValue(rawData?.drug_name || rawData?.control_name, "Unidentified medicine"),
     batch: safeValue(rawData?.batch_number),
     manufacturer: safeValue(rawData?.manufacturer || rawData?.marketed_by),
     strength: safeValue(rawData?.strength),
@@ -141,34 +167,10 @@ function mapReferenceRecord(rawData) {
     marketedBy: safeValue(rawData?.marketed_by),
     trustScore: rawData?.confidence_score ?? 0,
     status: normalizeStatus(rawData?.status),
-    validatedAt: rawData?.validated_at || null,
+    validatedAt: rawData?.validated_at || rawData?.approved_at || null,
     ocrResultId: rawData?.ocr_result_id || null,
-    documentId: rawData?.document_id || null,
+    documentId: rawData?.document_id || rawData?.source_document_id || null,
     raw: rawData || {},
-  };
-}
-
-function mapIncomingValidation(validation) {
-  return {
-    id: validation?.id || null,
-    name: safeValue(validation?.drug_name, "Unidentified medicine"),
-    batch: safeValue(validation?.batch_number),
-    manufacturer: safeValue(validation?.manufacturer || validation?.marketed_by),
-    strength: safeValue(validation?.strength),
-    dosageForm: safeValue(validation?.dosage_form),
-    mfgDate: safeValue(validation?.manufacturing_date),
-    expDate: safeValue(validation?.expiry_date),
-    licenseNo: safeValue(validation?.license_number),
-    composition: safeValue(validation?.composition_summary),
-    storage: safeValue(validation?.storage_conditions),
-    warnings: safeValue(validation?.analysis_summary, "No warnings extracted"),
-    marketedBy: safeValue(validation?.marketed_by),
-    trustScore: validation?.confidence_score ?? 0,
-    status: normalizeStatus(validation?.status),
-    validatedAt: validation?.validated_at || null,
-    ocrResultId: validation?.ocr_result_id || null,
-    documentId: validation?.document_id || null,
-    raw: validation || {},
   };
 }
 
@@ -190,9 +192,9 @@ function buildIncomingFromComparisonPayload(comparisonData) {
     storage: safeValue(validation?.storage_conditions),
     warnings: safeValue(validation?.analysis_summary, "No warnings extracted"),
     marketedBy: safeValue(validation?.marketed_by),
-    trustScore: validation?.confidence_score ?? comparison?.authenticity_score ?? 0,
+    trustScore: validation?.confidence_score ?? 0,
     status: normalizeStatus(
-      validation?.status || comparison?.final_decision || comparison?.status,
+      comparison?.final_decision || comparison?.status || validation?.status,
     ),
     validatedAt: validation?.validated_at || comparison?.compared_at || null,
     ocrResultId: validation?.ocr_result_id || comparison?.ocr_result_id || null,
@@ -204,17 +206,42 @@ function buildIncomingFromComparisonPayload(comparisonData) {
   };
 }
 
-function buildFieldDifferences(referenceLabel, incomingLabel) {
-  return fields
-    .filter((field) => {
-      const leftValue = referenceLabel[field.key];
-      const rightValue = incomingLabel[field.key];
-      return leftValue !== rightValue;
-    })
-    .map((field) => field.key);
+function buildFieldDifferences(referenceLabel, incomingLabel, deviations) {
+  const deviationFields = new Set();
+
+  deviations.forEach((deviation) => {
+    Object.entries(fieldKeyMap).forEach(([frontendKey, backendKeys]) => {
+      if (backendKeys.includes(deviation.field)) {
+        deviationFields.add(frontendKey);
+      }
+    });
+  });
+
+  fields.forEach((field) => {
+    const leftValue = referenceLabel[field.key];
+    const rightValue = incomingLabel[field.key];
+
+    if (
+      leftValue !== rightValue &&
+      leftValue !== "—" &&
+      rightValue !== "—" &&
+      leftValue !== "Awaiting upload" &&
+      rightValue !== "Upload a new label to generate incoming values."
+    ) {
+      deviationFields.add(field.key);
+    }
+  });
+
+  return Array.from(deviationFields);
 }
 
-function buildComplianceChecks(referenceLabel, incomingLabel, deviations) {
+function buildComplianceChecks(
+  referenceLabel,
+  incomingLabel,
+  deviations,
+  comparisonStatus,
+  matchPercentage
+) {
   const referenceChecks = [
     {
       icon: "check_circle",
@@ -238,7 +265,23 @@ function buildComplianceChecks(referenceLabel, incomingLabel, deviations) {
 
   const incomingChecks = [];
 
-  if (deviations.length === 0) {
+  if (comparisonStatus && comparisonStatus !== "PENDING") {
+    incomingChecks.push({
+      icon: comparisonStatus === "PASS" ? "check_circle" : "warning",
+      color: comparisonStatus === "PASS" ? "text-[#006970]" : "text-[#ba1a1a]",
+      text: `Comparison result: ${comparisonStatus}.`,
+      fill: true,
+    });
+
+    incomingChecks.push({
+      icon: "percent",
+      color: "text-[#004275]",
+      text: `Match percentage: ${matchPercentage ?? 0}%.`,
+      fill: false,
+    });
+  }
+
+  if (deviations.length === 0 && comparisonStatus && comparisonStatus !== "PENDING") {
     incomingChecks.push({
       icon: "check_circle",
       color: "text-[#006970]",
@@ -250,8 +293,9 @@ function buildComplianceChecks(referenceLabel, incomingLabel, deviations) {
       const severity = deviation.severity || "MINOR";
       const color = severity === "CRITICAL" ? "text-[#ba1a1a]" : "text-[#6a3100]";
       const icon = severity === "CRITICAL" ? "warning" : "info";
+
       const fieldLabel =
-        fields.find((field) => field.key === deviation.field)?.label ||
+        fields.find((field) => (fieldKeyMap[field.key] || []).includes(deviation.field))?.label ||
         deviation.field ||
         deviation.word ||
         "Unknown field";
@@ -369,6 +413,36 @@ function StatusBadge({ status }) {
   );
 }
 
+function DecisionBadge({ decision }) {
+  if (!decision || decision === "PENDING") {
+    return (
+      <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold uppercase tracking-widest bg-[#f0f4fd] text-[#414750]">
+        Pending
+      </div>
+    );
+  }
+
+  const isPass = decision === "PASS";
+
+  return (
+    <div
+      className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold uppercase tracking-widest ${
+        isPass
+          ? "bg-[#d8f3dc] text-[#1b5e20]"
+          : "bg-[#ffdad6] text-[#ba1a1a]"
+      }`}
+    >
+      <span
+        className="material-symbols-outlined text-sm"
+        style={{ fontVariationSettings: "'FILL' 1" }}
+      >
+        {isPass ? "task_alt" : "cancel"}
+      </span>
+      {decision}
+    </div>
+  );
+}
+
 function FieldRow({ field, valA, valB, isDiff, highlight, deviation }) {
   const severity = deviation?.severity || "";
   const hasCritical = severity === "CRITICAL";
@@ -384,23 +458,13 @@ function FieldRow({ field, valA, valB, isDiff, highlight, deviation }) {
           isDiff && highlight ? "bg-[#ffdcc7]/30" : "bg-[#f0f4fd]"
         }`}
       >
-        {field.multiline ? (
-          <p
-            className={`text-sm font-medium leading-relaxed ${
-              isDiff && highlight ? "text-[#6a3100]" : "text-[#171c22]"
-            }`}
-          >
-            {safeValue(valA)}
-          </p>
-        ) : (
-          <p
-            className={`text-sm font-medium ${
-              isDiff && highlight ? "text-[#6a3100]" : "text-[#171c22]"
-            }`}
-          >
-            {safeValue(valA)}
-          </p>
-        )}
+        <p
+          className={`text-sm leading-relaxed ${
+            isDiff && highlight ? "text-[#6a3100]" : "text-[#171c22]"
+          } font-medium`}
+        >
+          {safeValue(valA)}
+        </p>
       </div>
 
       <div className="flex items-center justify-center h-full min-h-[44px]">
@@ -428,31 +492,17 @@ function FieldRow({ field, valA, valB, isDiff, highlight, deviation }) {
           isDiff && highlight ? "bg-[#ffdcc7]/30" : "bg-[#f0f4fd]"
         }`}
       >
-        {field.multiline ? (
-          <p
-            className={`text-sm leading-relaxed ${
-              isDiff && highlight
-                ? hasCritical
-                  ? "text-[#ba1a1a] font-semibold"
-                  : "text-[#6a3100] font-semibold"
-                : "text-[#171c22] font-medium"
-            }`}
-          >
-            {safeValue(valB)}
-          </p>
-        ) : (
-          <p
-            className={`text-sm ${
-              isDiff && highlight
-                ? hasCritical
-                  ? "text-[#ba1a1a] font-semibold"
-                  : "text-[#6a3100] font-semibold"
-                : "text-[#171c22] font-medium"
-            }`}
-          >
-            {safeValue(valB)}
-          </p>
-        )}
+        <p
+          className={`text-sm leading-relaxed ${
+            isDiff && highlight
+              ? hasCritical
+                ? "text-[#ba1a1a] font-semibold"
+                : "text-[#6a3100] font-semibold"
+              : "text-[#171c22] font-medium"
+          }`}
+        >
+          {safeValue(valB)}
+        </p>
 
         {deviation?.type && (
           <p className="text-[10px] mt-1 uppercase tracking-widest text-[#414750]">
@@ -470,14 +520,11 @@ export default function ComparisonPage() {
   const { validationId: validationIdFromUrl } = useParams();
 
   const stateData = location.state || {};
+  const data = stateData.data ?? null;
 
   const validationId = stateData.validationId ?? validationIdFromUrl ?? null;
   const ocrResultId = stateData.ocrResultId ?? null;
-  const controlId =
-  stateData.controlId ??
-  data?.verified_control_id ??
-  null;
-  const data = stateData.data ?? null;
+  const controlId = stateData.controlId ?? data?.verified_control_id ?? data?.id ?? null;
 
   const [showDiffOnly, setShowDiffOnly] = useState(false);
   const [highlightDiffs, setHighlightDiffs] = useState(true);
@@ -489,16 +536,6 @@ export default function ComparisonPage() {
   const [isLoadingStoredComparison, setIsLoadingStoredComparison] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [statusMessage, setStatusMessage] = useState("");
-
-  console.log("===== COMPARISON PAGE DEBUG =====");
-  console.log("location.pathname:", location.pathname);
-  console.log("location.state:", location.state);
-  console.log("validationIdFromUrl:", validationIdFromUrl);
-  console.log("resolved validationId:", validationId);
-  console.log("ocrResultId:", ocrResultId);
-  console.log("controlId:", controlId);
-  console.log("data:", data);
-  console.log("=================================");
 
   const referenceLabel = useMemo(() => mapReferenceRecord(data || {}), [data]);
 
@@ -534,32 +571,33 @@ export default function ComparisonPage() {
     if (!comparisonData) {
       return [];
     }
+
     return parseDeviationList(
       comparisonData?.comparison?.deviations || comparisonData?.data?.deviations || [],
     );
   }, [comparisonData]);
 
   const diffFields = useMemo(
-    () => buildFieldDifferences(referenceLabel, incomingLabel),
-    [referenceLabel, incomingLabel],
+    () => buildFieldDifferences(referenceLabel, incomingLabel, deviations),
+    [referenceLabel, incomingLabel, deviations],
   );
 
   const visibleFields = useMemo(() => {
     return showDiffOnly ? fields.filter((field) => diffFields.includes(field.key)) : fields;
   }, [showDiffOnly, diffFields]);
 
-  const totalDiffs = diffFields.length;
-  const matchingCount = fields.length - totalDiffs;
+  const totalDiffs = comparisonData ? diffFields.length : 0;
+  const matchingCount = comparisonData ? Math.max(fields.length - totalDiffs, 0) : 0;
+
   const matchPercentage =
     comparisonData?.comparison?.match_percentage ??
     comparisonData?.data?.match_percentage ??
-    Math.round((matchingCount / fields.length) * 100);
+    null;
 
   const authenticityScore =
     comparisonData?.comparison?.authenticity_score ??
     comparisonData?.data?.authenticity_score ??
-    incomingLabel.trustScore ??
-    0;
+    null;
 
   const finalDecision =
     comparisonData?.comparison?.final_decision ??
@@ -572,8 +610,15 @@ export default function ComparisonPage() {
     "PENDING";
 
   const complianceCards = useMemo(
-    () => buildComplianceChecks(referenceLabel, incomingLabel, deviations),
-    [referenceLabel, incomingLabel, deviations],
+    () =>
+      buildComplianceChecks(
+        referenceLabel,
+        incomingLabel,
+        deviations,
+        comparisonStatus,
+        matchPercentage,
+      ),
+    [referenceLabel, incomingLabel, deviations, comparisonStatus, matchPercentage],
   );
 
   const auditCards = useMemo(
@@ -583,7 +628,6 @@ export default function ComparisonPage() {
 
   useEffect(() => {
     if (!location.state && !validationIdFromUrl) {
-      console.log("No location.state and no URL param. Redirecting to /records");
       navigate("/records");
     }
   }, [location.state, validationIdFromUrl, navigate]);
@@ -596,16 +640,13 @@ export default function ComparisonPage() {
 
       try {
         setIsLoadingStoredComparison(true);
-        console.log("Loading stored comparison for comparisonId:", comparisonId);
         const result = await getComparisonResult(comparisonId);
-        console.log("Stored comparison result:", result);
 
         setComparisonData((previous) => ({
           ...(previous || {}),
-          comparison: result,
+          comparison: result?.data || result || {},
         }));
       } catch (error) {
-        console.error("Failed to load stored comparison result:", error);
         setErrorMessage(error.message || "Failed to load stored comparison result.");
       } finally {
         setIsLoadingStoredComparison(false);
@@ -616,24 +657,15 @@ export default function ComparisonPage() {
   }, [comparisonId]);
 
   async function handleRunComparison() {
-    console.log("===== RUN COMPARISON CLICKED =====");
-    console.log("controlId:", controlId);
-    console.log("validationId:", validationId);
-    console.log("ocrResultId:", ocrResultId);
-    console.log("selectedFile:", selectedFile);
-    console.log("==================================");
-
     if (!controlId) {
       setErrorMessage(
-    "Backend error: verified_control_id missing.\nEnsure /api/validation/latest returns it."
-  );
-      console.error("Comparison blocked because controlId is missing.");
+        "Backend error: verified_control_id missing. Ensure the selected verified record is being passed correctly."
+      );
       return;
     }
 
     if (!selectedFile) {
       setErrorMessage("Please upload a new label file before running comparison.");
-      console.error("Comparison blocked because no file was selected.");
       return;
     }
 
@@ -642,17 +674,12 @@ export default function ComparisonPage() {
       setErrorMessage("");
       setStatusMessage("");
 
-      console.log("Calling runComparisonForVerifiedControl with:");
-      console.log("controlId:", controlId);
-      console.log("file:", selectedFile);
-
       const result = await runComparisonForVerifiedControl(controlId, selectedFile);
-
-      console.log("Comparison API result:", result);
 
       const comparisonPayload = {
         comparison: result?.data || {},
         validation: result?.validation || {},
+        reference: result?.reference || {},
       };
 
       setComparisonData(comparisonPayload);
@@ -660,7 +687,6 @@ export default function ComparisonPage() {
       setStatusMessage("Comparison completed successfully.");
       setActiveTab("fields");
     } catch (error) {
-      console.error("Comparison failed:", error);
       setErrorMessage(error.message || "Comparison failed.");
     } finally {
       setIsRunningComparison(false);
@@ -896,7 +922,7 @@ export default function ComparisonPage() {
                         className="text-2xl font-bold text-[#6a3100]"
                         style={{ fontFamily: "Public Sans, sans-serif" }}
                       >
-                        {incomingLabel.trustScore}%
+                        {comparisonData ? `${incomingLabel.trustScore}%` : "Pending"}
                       </p>
                     </div>
                     <div className="text-right">
@@ -971,7 +997,7 @@ export default function ComparisonPage() {
                     </div>
 
                     {visibleFields.map((field) => {
-                      const isDiff = diffFields.includes(field.key);
+                      const isDiff = comparisonData ? diffFields.includes(field.key) : false;
                       const deviation = getDeviationByField(deviations, field.key);
 
                       return (
@@ -1011,7 +1037,7 @@ export default function ComparisonPage() {
                       );
                     })}
 
-                    {showDiffOnly && visibleFields.length === 0 && (
+                    {showDiffOnly && comparisonData && visibleFields.length === 0 && (
                       <div className="flex flex-col items-center justify-center py-20 text-[#414750]">
                         <span
                           className="material-symbols-outlined text-4xl text-[#006970] mb-3"
@@ -1045,11 +1071,23 @@ export default function ComparisonPage() {
                             </span>
                             <span
                               className={`text-lg font-bold ${
-                                data.trustScore >= 95 ? "text-[#006970]" : "text-[#6a3100]"
+                                label === "Label A"
+                                  ? data.trustScore >= 95
+                                    ? "text-[#006970]"
+                                    : "text-[#6a3100]"
+                                  : comparisonData
+                                    ? data.trustScore >= 95
+                                      ? "text-[#006970]"
+                                      : "text-[#6a3100]"
+                                    : "text-[#414750]"
                               }`}
                               style={{ fontFamily: "Public Sans, sans-serif" }}
                             >
-                              {data.trustScore}%
+                              {label === "Label A"
+                                ? `${data.trustScore}%`
+                                : comparisonData
+                                  ? `${data.trustScore}%`
+                                  : "Pending"}
                             </span>
                           </div>
                         </div>
@@ -1057,26 +1095,43 @@ export default function ComparisonPage() {
                         <div className="h-1.5 bg-[#f0f4fd] rounded-full overflow-hidden mb-5">
                           <div
                             className={`h-full rounded-full transition-all ${
-                              data.trustScore >= 95 ? "bg-[#006970]" : "bg-[#6a3100]"
+                              label === "Label A"
+                                ? data.trustScore >= 95
+                                  ? "bg-[#006970]"
+                                  : "bg-[#6a3100]"
+                                : comparisonData
+                                  ? data.trustScore >= 95
+                                    ? "bg-[#006970]"
+                                    : "bg-[#6a3100]"
+                                  : "bg-[#c1c7d2]"
                             }`}
-                            style={{ width: `${Math.max(0, Math.min(100, data.trustScore))}%` }}
+                            style={{
+                              width: `${Math.max(
+                                0,
+                                Math.min(100, label === "Label A" ? data.trustScore : comparisonData ? data.trustScore : 0)
+                              )}%`,
+                            }}
                           />
                         </div>
 
                         <ul className="space-y-3">
-                          {checks.map((check, index) => (
-                            <li key={`${label}-${index}`} className="flex items-start gap-3">
-                              <span
-                                className={`material-symbols-outlined text-lg shrink-0 ${check.color}`}
-                                style={check.fill ? { fontVariationSettings: "'FILL' 1" } : {}}
-                              >
-                                {check.icon}
-                              </span>
-                              <span className="text-sm text-[#171c22] leading-snug">
-                                {check.text}
-                              </span>
-                            </li>
-                          ))}
+                          {checks.length > 0 ? (
+                            checks.map((check, index) => (
+                              <li key={`${label}-${index}`} className="flex items-start gap-3">
+                                <span
+                                  className={`material-symbols-outlined text-lg shrink-0 ${check.color}`}
+                                  style={check.fill ? { fontVariationSettings: "'FILL' 1" } : {}}
+                                >
+                                  {check.icon}
+                                </span>
+                                <span className="text-sm text-[#171c22] leading-snug">
+                                  {check.text}
+                                </span>
+                              </li>
+                            ))
+                          ) : (
+                            <li className="text-sm text-[#414750]">Run comparison to view checks.</li>
+                          )}
                         </ul>
 
                         <div className="mt-5 pt-5 border-t border-[#c1c7d2]/15">
@@ -1145,13 +1200,30 @@ export default function ComparisonPage() {
 
                 <div className="space-y-3">
                   {[
-                    { label: "Total Fields", value: fields.length, color: "text-[#171c22]" },
-                    { label: "Matching", value: matchingCount, color: "text-[#006970]" },
-                    { label: "Discrepancies", value: totalDiffs, color: "text-[#6a3100]" },
+                    {
+                      label: "Total Fields",
+                      value: comparisonData ? fields.length : "Pending",
+                      color: "text-[#171c22]",
+                    },
+                    {
+                      label: "Matching",
+                      value: comparisonData ? matchingCount : "Pending",
+                      color: "text-[#006970]",
+                    },
+                    {
+                      label: "Discrepancies",
+                      value: comparisonData ? totalDiffs : "Pending",
+                      color: "text-[#6a3100]",
+                    },
                     {
                       label: "Authenticity",
-                      value: `${authenticityScore}%`,
-                      color: authenticityScore >= 90 ? "text-[#006970]" : "text-[#6a3100]",
+                      value: authenticityScore === null ? "Pending" : `${authenticityScore}%`,
+                      color:
+                        authenticityScore === null
+                          ? "text-[#414750]"
+                          : authenticityScore >= 90
+                            ? "text-[#006970]"
+                            : "text-[#6a3100]",
                     },
                   ].map(({ label, value, color }) => (
                     <div
@@ -1167,14 +1239,43 @@ export default function ComparisonPage() {
                 <div className="mt-4">
                   <div className="flex justify-between text-[10px] text-[#414750] mb-1">
                     <span className="uppercase tracking-widest">Match rate</span>
-                    <span className="font-bold">{matchPercentage}%</span>
+                    <span className="font-bold">
+                      {matchPercentage === null ? "Pending" : `${matchPercentage}%`}
+                    </span>
                   </div>
                   <div className="h-2 bg-[#f0f4fd] rounded-full overflow-hidden">
                     <div
-                      className="h-full bg-[#006970] rounded-full"
-                      style={{ width: `${Math.max(0, Math.min(100, matchPercentage))}%` }}
+                      className={`h-full rounded-full ${
+                        comparisonStatus === "PASS"
+                          ? "bg-[#006970]"
+                          : comparisonStatus === "FAIL"
+                            ? "bg-[#ba1a1a]"
+                            : "bg-[#c1c7d2]"
+                      }`}
+                      style={{ width: `${Math.max(0, Math.min(100, matchPercentage ?? 0))}%` }}
                     />
                   </div>
+                </div>
+              </div>
+
+              <div className="p-6 border-b border-[#c1c7d2]/10">
+                <h3 className="text-xs font-bold text-[#171c22] uppercase tracking-widest mb-4 flex items-center gap-2">
+                  <span className="w-1 h-3 bg-[#6a3100] rounded-full" />
+                  Final Result
+                </h3>
+
+                <div className="bg-[#f8f9ff] rounded-xl border border-[#c1c7d2]/20 p-4">
+                  <div className="mb-3">
+                    <DecisionBadge decision={finalDecision} />
+                  </div>
+
+                  <p className="text-xs text-[#414750] leading-relaxed">
+                    {comparisonData
+                      ? comparisonStatus === "PASS"
+                        ? "The uploaded label matches the verified control closely enough to pass the comparison."
+                        : "The uploaded label failed comparison due to one or more important mismatches."
+                      : "Upload a new label and run the comparison to see the final result."}
+                  </p>
                 </div>
               </div>
 
@@ -1184,7 +1285,7 @@ export default function ComparisonPage() {
                   Flagged Fields
                 </h3>
                 <div className="space-y-2">
-                  {diffFields.length > 0 ? (
+                  {comparisonData && diffFields.length > 0 ? (
                     fields
                       .filter((field) => diffFields.includes(field.key))
                       .map((field) => {
@@ -1205,7 +1306,7 @@ export default function ComparisonPage() {
                       })
                   ) : (
                     <div className="text-xs text-[#414750] bg-[#f0f4fd] px-3 py-2 rounded-lg">
-                      No flagged fields yet.
+                      {comparisonData ? "No flagged fields." : "Run comparison to view flagged fields."}
                     </div>
                   )}
                 </div>
@@ -1223,7 +1324,7 @@ export default function ComparisonPage() {
                   <p className="text-xs text-[#414750] leading-relaxed">
                     {comparisonData
                       ? totalDiffs > 0
-                        ? `${totalDiffs} field${totalDiffs !== 1 ? "s" : ""} differ between the verified reference and uploaded label. Review all flagged deviations before approval.`
+                        ? `${totalDiffs} field${totalDiffs !== 1 ? "s" : ""} differ between the verified reference and uploaded label. Review all flagged deviations.`
                         : "No meaningful differences were detected. Incoming label is aligned with the verified reference."
                       : "Upload a new label and run the comparison to generate a decision report."}
                   </p>
@@ -1231,25 +1332,6 @@ export default function ComparisonPage() {
               </div>
 
               <div className="p-6 space-y-3 mt-auto">
-                <button
-                  type="button"
-                  disabled={!comparisonData || finalDecision !== "VALID"}
-                  className="w-full flex items-center justify-center gap-2 py-3 text-white rounded-lg text-xs font-bold uppercase tracking-widest transition-all disabled:opacity-60 disabled:cursor-not-allowed"
-                  style={{ background: "linear-gradient(135deg, #004275 0%, #005a9c 100%)" }}
-                >
-                  <span className="material-symbols-outlined text-sm">task_alt</span>
-                  Approve Label B
-                </button>
-
-                <button
-                  type="button"
-                  disabled={!comparisonData}
-                  className="w-full flex items-center justify-center gap-2 py-3 bg-[#ffdad6]/40 text-[#ba1a1a] rounded-lg text-xs font-bold uppercase tracking-widest hover:bg-[#ffdad6]/70 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
-                >
-                  <span className="material-symbols-outlined text-sm">cancel</span>
-                  Reject Label B
-                </button>
-
                 <button
                   type="button"
                   onClick={handleExportReport}

@@ -1,18 +1,3 @@
-"""
-comparison_routes.py
-
-Flow:
-  1. User opens comparison page from a verified record
-  2. User uploads a new file
-  3. Save uploaded file
-  4. OCR -> process_image / process_pdf
-  5. Save OCR result
-  6. Validate OCR text
-  7. Compare against selected VerifiedControl
-  8. Store ComparisonResult
-"""
-
-import os
 import json
 import logging
 from pathlib import Path
@@ -45,9 +30,6 @@ ALLOWED_EXTENSIONS = {".png", ".jpg", ".jpeg", ".pdf", ".webp"}
 
 
 def _get_upload_root() -> Path:
-    """
-    Returns a stable upload folder for comparison uploads.
-    """
     configured = current_app.config.get("COMPARISON_UPLOAD_FOLDER")
     if configured:
         root = Path(configured)
@@ -59,9 +41,6 @@ def _get_upload_root() -> Path:
 
 
 def _save_uploaded_file(file_storage):
-    """
-    Save uploaded file to disk and return metadata.
-    """
     original_name = secure_filename(file_storage.filename or "")
     if not original_name:
         raise ValueError("Empty filename")
@@ -73,7 +52,6 @@ def _save_uploaded_file(file_storage):
     upload_root = _get_upload_root()
     unique_name = f"{uuid4().hex}{suffix}"
     saved_path = upload_root / unique_name
-
     file_storage.save(saved_path)
 
     file_size = saved_path.stat().st_size if saved_path.exists() else 0
@@ -89,9 +67,6 @@ def _save_uploaded_file(file_storage):
 
 
 def _run_ocr(saved_path: str, suffix: str):
-    """
-    OCR wrapper based on file type.
-    """
     if suffix == ".pdf":
         return ocr_service.process_pdf(saved_path)
     return ocr_service.process_image(saved_path)
@@ -100,25 +75,15 @@ def _run_ocr(saved_path: str, suffix: str):
 @bp.route("/run/<int:control_id>", methods=["POST"])
 def run_comparison(control_id):
     try:
-        # ----------------------------------------------------
-        # 1. Get verified reference
-        # ----------------------------------------------------
         control = VerifiedControl.query.get_or_404(control_id)
 
-        # ----------------------------------------------------
-        # 2. Validate uploaded file
-        # ----------------------------------------------------
         if "file" not in request.files:
             return jsonify({"success": False, "error": "No file uploaded"}), 400
 
         file = request.files["file"]
-
         if not file or file.filename == "":
             return jsonify({"success": False, "error": "Empty filename"}), 400
 
-        # ----------------------------------------------------
-        # 3. Save uploaded file permanently/stably
-        # ----------------------------------------------------
         try:
             upload_meta = _save_uploaded_file(file)
         except ValueError as e:
@@ -127,21 +92,17 @@ def run_comparison(control_id):
         saved_path = upload_meta["saved_path"]
         suffix = upload_meta["suffix"]
 
-        # ----------------------------------------------------
-        # 4. Create Document row for uploaded label B
-        # ----------------------------------------------------
+        # comparison-only document
         document = Document(
             filename=upload_meta["original_name"],
             file_path=saved_path,
             file_type=upload_meta["file_type"],
             file_size=upload_meta["file_size"],
+            is_comparison_only=True,
         )
         db.session.add(document)
         db.session.flush()
 
-        # ----------------------------------------------------
-        # 5. OCR processing
-        # ----------------------------------------------------
         ocr_output = _run_ocr(saved_path, suffix)
         extracted_text = (ocr_output or {}).get("extracted_text", "") or ""
 
@@ -152,9 +113,6 @@ def run_comparison(control_id):
                 "error": "OCR completed but no text was extracted from the uploaded file."
             }), 400
 
-        # ----------------------------------------------------
-        # 6. Save OCR result
-        # ----------------------------------------------------
         ocr_result = OCRResult(
             document_id=document.id,
             extracted_text=extracted_text,
@@ -162,13 +120,11 @@ def run_comparison(control_id):
             ocr_engine=(ocr_output or {}).get("ocr_engine"),
             model_name=(ocr_output or {}).get("model_name"),
             processing_time=(ocr_output or {}).get("processing_time"),
+            is_comparison_only=True,
         )
         db.session.add(ocr_result)
         db.session.flush()
 
-        # ----------------------------------------------------
-        # 7. Validation of uploaded label B
-        # ----------------------------------------------------
         validation_output = validation_service.validate_text(extracted_text) or {}
 
         validation_result = ValidationResult(
@@ -195,29 +151,18 @@ def run_comparison(control_id):
             confidence_score=validation_output.get("confidence_score", 0),
             analysis_summary=validation_output.get("analysis_summary"),
             raw_result=json.dumps(validation_output),
+            is_comparison_only=True,
         )
-
         validation_result.update_status()
         db.session.add(validation_result)
         db.session.flush()
 
-        # ----------------------------------------------------
-        # 8. Comparison
-        # Reference = selected verified control
-        # Incoming = newly uploaded + OCR'd + validated file
-        # ----------------------------------------------------
+        verified_data = control.to_dict()
+
         comparison_output = ComparisonService.run_comparison(
             verified_text=control.verified_text,
             validation_data=validation_result.to_dict(),
-        )
-
-        # ----------------------------------------------------
-        # 9. Final decision for stored comparison record
-        # ----------------------------------------------------
-        final_decision = (
-            "VALID"
-            if comparison_output.get("status") == "PASS"
-            else "SUSPICIOUS"
+            verified_data=verified_data,
         )
 
         submitter_ip = request.remote_addr or "unknown"
@@ -229,7 +174,7 @@ def run_comparison(control_id):
             match_percentage=comparison_output.get("match_percentage", 0.0),
             deviations=json.dumps(comparison_output.get("deviations", [])),
             status=comparison_output.get("status"),
-            final_decision=final_decision,
+            final_decision=comparison_output.get("final_decision"),
             authenticity_score=comparison_output.get("authenticity_score", 0),
             submitter_ip=submitter_ip,
         )
@@ -237,9 +182,6 @@ def run_comparison(control_id):
         db.session.add(comparison)
         db.session.flush()
 
-        # ----------------------------------------------------
-        # 10. Audit hashes
-        # ----------------------------------------------------
         comparison.audit_hash = AuditService.generate_audit_hash(
             extracted_text=extracted_text,
             match_percentage=comparison.match_percentage,
@@ -262,7 +204,7 @@ def run_comparison(control_id):
             "success": True,
             "data": comparison.to_dict(),
             "validation": validation_result.to_dict(),
-            "reference": control.to_dict(),
+            "reference": verified_data,
         }), 200
 
     except Exception as e:
@@ -275,22 +217,3 @@ def run_comparison(control_id):
 def get_result(id):
     comparison = ComparisonResult.query.get_or_404(id)
     return jsonify({"success": True, "data": comparison.to_dict()}), 200
-
-
-@bp.route("/verify/<int:id>", methods=["GET"])
-def verify(id):
-    comparison = ComparisonResult.query.get_or_404(id)
-
-    verification = AuditService.verify_record(
-        {
-            "match_percentage": comparison.match_percentage,
-            "status": comparison.status,
-            "final_decision": comparison.final_decision,
-            "authenticity_score": comparison.authenticity_score,
-            "compared_at": comparison.compared_at.isoformat(),
-            "submitter_ip": comparison.submitter_ip,
-        },
-        comparison.audit_hash,
-    )
-
-    return jsonify({"success": True, "verification": verification}), 200
