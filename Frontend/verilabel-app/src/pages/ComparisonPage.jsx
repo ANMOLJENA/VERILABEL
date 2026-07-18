@@ -148,30 +148,6 @@ function mapReferenceRecord(rawData) {
   };
 }
 
-function mapIncomingValidation(validation) {
-  return {
-    id: validation?.id || null,
-    name: safeValue(validation?.drug_name, "Unidentified medicine"),
-    batch: safeValue(validation?.batch_number),
-    manufacturer: safeValue(validation?.manufacturer || validation?.marketed_by),
-    strength: safeValue(validation?.strength),
-    dosageForm: safeValue(validation?.dosage_form),
-    mfgDate: safeValue(validation?.manufacturing_date),
-    expDate: safeValue(validation?.expiry_date),
-    licenseNo: safeValue(validation?.license_number),
-    composition: safeValue(validation?.composition_summary),
-    storage: safeValue(validation?.storage_conditions),
-    warnings: safeValue(validation?.analysis_summary, "No warnings extracted"),
-    marketedBy: safeValue(validation?.marketed_by),
-    trustScore: validation?.confidence_score ?? 0,
-    status: normalizeStatus(validation?.status),
-    validatedAt: validation?.validated_at || null,
-    ocrResultId: validation?.ocr_result_id || null,
-    documentId: validation?.document_id || null,
-    raw: validation || {},
-  };
-}
-
 function buildIncomingFromComparisonPayload(comparisonData) {
   const validation = comparisonData?.validation || {};
   const comparison = comparisonData?.comparison || comparisonData?.data || {};
@@ -473,11 +449,11 @@ export default function ComparisonPage() {
 
   const validationId = stateData.validationId ?? validationIdFromUrl ?? null;
   const ocrResultId = stateData.ocrResultId ?? null;
-  const controlId =
-  stateData.controlId ??
-  data?.verified_control_id ??
-  null;
   const data = stateData.data ?? null;
+  const controlId =
+    stateData.controlId ??
+    data?.verified_control_id ??
+    null;
 
   const [showDiffOnly, setShowDiffOnly] = useState(false);
   const [highlightDiffs, setHighlightDiffs] = useState(true);

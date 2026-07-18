@@ -46,7 +46,8 @@ _configure_logging()
 logger = logging.getLogger(__name__)
 
 
-# ── Step 3: Poppler path setup (Windows only, PDF processing) if ollama fallback is enabled
+# ── Step 3: Poppler path setup (Windows only, PDF processing) — needed to
+# rasterize PDF pages to images before running them through Surya OCR
 if platform.system() == "Windows":
     poppler_path = os.getenv("POPPLER_PATH")  # read from .env if set
 #if not found installes poppler
@@ -67,7 +68,7 @@ if platform.system() == "Windows":
         logger.info("Poppler found at: %s", poppler_path)
     else:
         logger.warning(
-            "Poppler not found. PDF fallback via Ollama may fail. "
+            "Poppler not found. PDF OCR (page rasterization) may fail. "
             "Set POPPLER_PATH in .env or install Poppler to C:\\Program Files\\poppler"
         )
 
@@ -87,7 +88,11 @@ app = Flask(__name__)
 # CORS_ORIGINS in .env controls which origins are allowed:
 #   CORS_ORIGINS=*                           → allow everything (development)
 #   CORS_ORIGINS=http://localhost:3000       → allow only your frontend (production)
-cors_origins = os.getenv("CORS_ORIGINS", "*")
+cors_origins_raw = os.getenv("CORS_ORIGINS", "*")
+cors_origins = (
+    "*" if cors_origins_raw.strip() == "*"
+    else [origin.strip() for origin in cors_origins_raw.split(",") if origin.strip()]
+)
 CORS(app, origins=cors_origins)
 
 
@@ -97,7 +102,14 @@ CORS(app, origins=cors_origins)
 #
 # All values now read from .env with sensible defaults — nothing is hardcoded.
 app.config["SECRET_KEY"]                  = os.getenv("SECRET_KEY", "dev-secret-change-in-production")
-app.config["SQLALCHEMY_DATABASE_URI"]     = os.getenv("DATABASE_URL", "sqlite:///label_verification.db")
+
+# Neon/Heroku-style providers hand out `postgres://` URLs, but SQLAlchemy 2.x
+# only accepts `postgresql://` — rewrite it so DATABASE_URL can be pasted in
+# verbatim from the provider dashboard.
+_database_url = os.getenv("DATABASE_URL", "sqlite:///label_verification.db")
+if _database_url.startswith("postgres://"):
+    _database_url = "postgresql://" + _database_url[len("postgres://"):]
+app.config["SQLALCHEMY_DATABASE_URI"]     = _database_url
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False   # disables a Flask-SQLAlchemy warning
 app.config["UPLOAD_FOLDER"]              = os.getenv("UPLOAD_FOLDER", "uploads")
 app.config["MAX_CONTENT_LENGTH"]         = int(os.getenv("MAX_UPLOAD_MB", "16")) * 1024 * 1024
@@ -197,7 +209,7 @@ def save_api_json_response(response):
 
 
 # ── Step 9: OCR engine configuration ──────────────────────────────────────────
-# Using Ollama OCR service only for text extraction
+# Using local Surya OCR (in-process torch models) only for text extraction
 
 
 # ── Routes defined directly in app.py ────────────────────────────────────────
@@ -207,13 +219,13 @@ def save_api_json_response(response):
 def health_check():
     """
     Health check endpoint — used by frontend status bar to show if API is alive.
-    Also reports which OCR engine is currently active (gemini / ollama / none).
+    Also reports which OCR engine is currently active.
 
     SPRING BOOT EQUIVALENT: Spring Actuator /actuator/health
     """
     return jsonify({
         "status":     "healthy",
-        "ocr_engine": "ollama",  # Using Ollama GLM-OCR model
+        "ocr_engine": "surya",  # Using local Surya OCR models
         "message":    "Label Verification API running",
     }), 200
 

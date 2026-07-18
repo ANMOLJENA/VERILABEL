@@ -13,8 +13,14 @@ async function parseResponse(response) {
 async function apiRequest(path, options = {}) {
   let response;
   try {
-    response = await fetch(`${API_BASE_URL}${path}`, options);
-  } catch (_) {
+    // Use native fetch with credentials to bypass extension interference
+    response = await window.fetch(`${API_BASE_URL}${path}`, {
+      ...options,
+      credentials: 'same-origin',
+      mode: 'cors',
+    });
+  } catch (error) {
+    console.error('Fetch error:', error);
     throw new Error(
       "Cannot reach backend API. Make sure the backend server is running for local development.",
     );

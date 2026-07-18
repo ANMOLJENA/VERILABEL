@@ -1,11 +1,12 @@
 """
-ocr_routes.py — Updated to use Ollama OCR service only.
+ocr_routes.py — Uses local Surya OCR service only.
 
 Changes:
   1. Removed dependency on missing ocr_engine module
-  2. Uses OllamaOCRService directly for all OCR operations
+  2. Uses SuryaOCRService directly for all OCR operations (in-process
+     torch models, no external Ollama server required)
   3. Maintains same API endpoints for backward compatibility
-  4. Lazy initialization of Ollama service
+  4. Lazy initialization of Surya service (model weights load on first use)
 """
 
 import logging
@@ -17,7 +18,7 @@ from werkzeug.utils import secure_filename
 
 from configration.database import db
 from models.database import Document, OCRResult
-from services.ollama_ocr_service import OllamaOCRService
+from services.surya_ocr_service import get_surya_service
 
 logger = logging.getLogger(__name__)
 
@@ -26,15 +27,6 @@ bp = Blueprint("ocr", __name__, url_prefix="/api/ocr")
 # Allowed image extensions — PDFs are handled by /pdf endpoint only
 ALLOWED_IMAGE_EXTENSIONS = {"png", "jpg", "jpeg", "bmp", "tiff", "tif", "webp"}
 
-# ---------------------------------------------------------------------------
-# Lazy service singleton — Ollama OCR service only
-_ollama_service = None
-
-def get_ollama_service():
-    global _ollama_service
-    if _ollama_service is None:
-        _ollama_service = OllamaOCRService()
-    return _ollama_service
 
 def _extension(filename: str) -> str:
     return os.path.splitext(filename)[1].lstrip(".").lower()
@@ -73,7 +65,7 @@ def _persist_ocr_result(filename: str, ext: str, file_size: int, tmp_path: str, 
         document_id=document.id,
         extracted_text=extracted_text,
         translated_text=translated_text,
-        ocr_engine="ollama",
+        ocr_engine=result.get("ocr_engine", "surya"),
         model_name=result.get("model_name"),
         processing_time=result.get("processing_time"),
     )
@@ -120,7 +112,7 @@ def ocr_image():
             file.save(tmp.name)
             tmp_path = tmp.name
 
-        result = get_ollama_service().process_image(tmp_path)
+        result = get_surya_service().process_image(tmp_path)
         stored_result = _persist_ocr_result(filename, ext, file_size, tmp_path, result)
         return jsonify({"success": True, "data": stored_result}), 200
 
@@ -160,7 +152,7 @@ def ocr_pdf():
             file.save(tmp.name)
             tmp_path = tmp.name
 
-        result = get_ollama_service().process_pdf(tmp_path)
+        result = get_surya_service().process_pdf(tmp_path)
         stored_result = _persist_ocr_result(filename, "pdf", file_size, tmp_path, result)
         return jsonify({"success": True, "data": stored_result}), 200
 

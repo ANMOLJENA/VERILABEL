@@ -77,7 +77,7 @@ Important risk guidance:
 class OpenRouterValidationService:
 
     OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
-    MODEL = "stepfun/step-3.5-flash:free"
+    MODEL = "poolside/laguna-xs-2.1:free"
     TIMEOUT = 45   # seconds — reasoning takes more time
 
     def __init__(self):

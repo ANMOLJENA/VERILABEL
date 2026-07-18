@@ -8,6 +8,18 @@ from dotenv import load_dotenv
 load_dotenv()
 
 
+def _normalized_database_url() -> str:
+    """
+    Neon/Heroku-style providers hand out `postgres://` URLs, but SQLAlchemy 2.x
+    only accepts the `postgresql://` scheme. Rewrite it so DATABASE_URL can be
+    pasted in verbatim from the provider dashboard.
+    """
+    url = os.getenv("DATABASE_URL", "sqlite:///label_verification.db")
+    if url.startswith("postgres://"):
+        url = "postgresql://" + url[len("postgres://"):]
+    return url
+
+
 class Config:
     """Base configuration"""
 
@@ -20,12 +32,9 @@ class Config:
     )
 
     # ---------------------------------------------------
-    # Database - SQLite
+    # Database
     # ---------------------------------------------------
-    SQLALCHEMY_DATABASE_URI = os.getenv(
-        "DATABASE_URL",
-        "sqlite:///label_verification.db"
-    )
+    SQLALCHEMY_DATABASE_URI = _normalized_database_url()
 
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
@@ -43,46 +52,12 @@ class Config:
     }
 
     # ---------------------------------------------------
-    # OCR ENGINE PRIORITY
+    # Surya OCR Configuration
     # ---------------------------------------------------
-    # Primary Engine
-    OCR_PRIMARY_ENGINE = os.getenv(
-        "OCR_PRIMARY_ENGINE",
-        "ollama"
+    SURYA_OCR_LANGS = os.getenv(
+        "SURYA_OCR_LANGS",
+        "en"
     )
-
-    # Fallback Engine
-    OCR_FALLBACK_ENGINE = os.getenv(
-        "OCR_FALLBACK_ENGINE",
-        "tesseract"
-    )
-
-    # ---------------------------------------------------
-    # Ollama Configuration
-    # ---------------------------------------------------
-    OLLAMA_ENABLED = os.getenv(
-        "OLLAMA_ENABLED",
-        "true"
-    ).lower() == "true"
-
-    OLLAMA_ENDPOINT = os.getenv(
-        "OLLAMA_ENDPOINT",
-        "http://localhost:11434"
-    )
-
-    OLLAMA_MODEL = os.getenv(
-        "OLLAMA_MODEL",
-        "glm-ocr:latest"
-    )
-
-    OLLAMA_TIMEOUT = int(
-        os.getenv("OLLAMA_TIMEOUT", "30")
-    )
-
-    # ---------------------------------------------------
-    # Tesseract Configuration
-    # ---------------------------------------------------
-    TESSERACT_CMD = os.getenv("TESSERACT_CMD")
 
     # ---------------------------------------------------
     # Offline Mode

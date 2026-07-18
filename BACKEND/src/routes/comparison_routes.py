@@ -30,7 +30,7 @@ from models.database import (
     ValidationResult,
 )
 from services.comparison_service import ComparisonService
-from services.ollama_ocr_service import OllamaOCRService
+from services.surya_ocr_service import get_surya_service
 from services.openrouter_validation_service import OpenRouterValidationService
 from services.audit_service import AuditService
 
@@ -38,7 +38,6 @@ logger = logging.getLogger(__name__)
 
 bp = Blueprint("comparison", __name__, url_prefix="/api/comparison")
 
-ocr_service = OllamaOCRService()
 validation_service = OpenRouterValidationService()
 
 ALLOWED_EXTENSIONS = {".png", ".jpg", ".jpeg", ".pdf", ".webp"}
@@ -92,6 +91,7 @@ def _run_ocr(saved_path: str, suffix: str):
     """
     OCR wrapper based on file type.
     """
+    ocr_service = get_surya_service()
     if suffix == ".pdf":
         return ocr_service.process_pdf(saved_path)
     return ocr_service.process_image(saved_path)
