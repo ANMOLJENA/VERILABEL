@@ -103,19 +103,25 @@ CORS(app, origins=cors_origins)
 # All values now read from .env with sensible defaults — nothing is hardcoded.
 app.config["SECRET_KEY"]                  = os.getenv("SECRET_KEY", "dev-secret-change-in-production")
 
+# PROJECT_ROOT anchors every on-disk path below to BACKEND/ regardless of the
+# working directory the process was launched from — a bare relative path like
+# "uploads" would otherwise land in a different folder depending on whether
+# you ran `python src/app.py` from BACKEND/ or from src/.
+PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+
 # Neon/Heroku-style providers hand out `postgres://` URLs, but SQLAlchemy 2.x
 # only accepts `postgresql://` — rewrite it so DATABASE_URL can be pasted in
 # verbatim from the provider dashboard.
-_database_url = os.getenv("DATABASE_URL", "sqlite:///label_verification.db")
+_default_sqlite_path = os.path.join(PROJECT_ROOT, "label_verification.db").replace("\\", "/")
+_database_url = os.getenv("DATABASE_URL") or f"sqlite:///{_default_sqlite_path}"
 if _database_url.startswith("postgres://"):
     _database_url = "postgresql://" + _database_url[len("postgres://"):]
 app.config["SQLALCHEMY_DATABASE_URI"]     = _database_url
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False   # disables a Flask-SQLAlchemy warning
-app.config["UPLOAD_FOLDER"]              = os.getenv("UPLOAD_FOLDER", "uploads")
 app.config["MAX_CONTENT_LENGTH"]         = int(os.getenv("MAX_UPLOAD_MB", "16")) * 1024 * 1024
+app.config["UPLOAD_FOLDER"]              = os.getenv("UPLOAD_FOLDER") or os.path.join(PROJECT_ROOT, "uploads")
 
 # JSON output directories
-PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 API_RESPONSE_EXPORT_DIR = os.path.join(PROJECT_ROOT, "exports", "api_responses")
 os.makedirs(API_RESPONSE_EXPORT_DIR, exist_ok=True)
 
