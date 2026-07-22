@@ -23,5 +23,10 @@ EXPOSE 5000
 
 WORKDIR /app/src
 
-# One worker keeps memory bounded; scale via instance size, not extra workers.
-CMD ["sh", "-c", "gunicorn --bind 0.0.0.0:${PORT} --workers 1 --timeout 120 app:app"]
+# 2 workers: RapidOCR only needs ~50MB/worker (measured), so this stays well
+# under a 512MB host while meaning a slow OpenRouter call in one worker
+# doesn't take down health checks/OCR for the whole app. Timeout is above
+# the OpenRouter service's own 45s read timeout with headroom, since
+# requests' timeout guards against silent gaps, not total request duration —
+# a slow-but-progressing response can still run past 45s without tripping it.
+CMD ["sh", "-c", "gunicorn --bind 0.0.0.0:${PORT} --workers 2 --timeout 180 app:app"]

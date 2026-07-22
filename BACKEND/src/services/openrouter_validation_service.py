@@ -16,6 +16,7 @@ import json
 import logging
 import os
 import re
+from concurrent.futures import ThreadPoolExecutor, TimeoutError as FutureTimeoutError
 
 import requests
 
@@ -80,6 +81,14 @@ class OpenRouterValidationService:
     MODEL = "poolside/laguna-xs-2.1:free"
     TIMEOUT = 45   # seconds — reasoning takes more time
 
+    # requests' own `timeout=` only guards against a connection going silent
+    # between chunks — a response trickling in slowly (e.g. streamed
+    # reasoning tokens) can run well past TIMEOUT without ever tripping it,
+    # leaving gunicorn's worker timeout as the only backstop, which kills
+    # the whole process rather than just failing this one request. Running
+    # the call in a future gives us a real wall-clock deadline instead.
+    _executor = ThreadPoolExecutor(max_workers=4, thread_name_prefix="openrouter")
+
     def __init__(self):
         api_key = os.getenv("OPENROUTER_API_KEY", "").strip()
         if not api_key:
@@ -92,6 +101,23 @@ class OpenRouterValidationService:
             "Content-Type": "application/json",
         }
         self._conversation_messages = []
+
+    def _post(self, payload: dict) -> requests.Response:
+        future = self._executor.submit(
+            requests.post,
+            self.OPENROUTER_URL,
+            headers=self._headers,
+            json=payload,
+            timeout=self.TIMEOUT,
+        )
+        try:
+            return future.result(timeout=self.TIMEOUT)
+        except FutureTimeoutError:
+            raise RuntimeError(f"OpenRouter API timed out after {self.TIMEOUT}s")
+        except requests.exceptions.Timeout:
+            raise RuntimeError(f"OpenRouter API timed out after {self.TIMEOUT}s")
+        except requests.exceptions.ConnectionError as exc:
+            raise RuntimeError(f"Could not connect to OpenRouter API: {exc}") from exc
 
     # ------------------------------------------------------------------
     # Public API
@@ -130,17 +156,7 @@ class OpenRouterValidationService:
             "reasoning": {"enabled": True}  # Enable reasoning capabilities
         }
 
-        try:
-            response = requests.post(
-                self.OPENROUTER_URL,
-                headers=self._headers,
-                json=payload,
-                timeout=self.TIMEOUT,
-            )
-        except requests.exceptions.Timeout:
-            raise RuntimeError(f"OpenRouter API timed out after {self.TIMEOUT}s")
-        except requests.exceptions.ConnectionError as exc:
-            raise RuntimeError(f"Could not connect to OpenRouter API: {exc}") from exc
+        response = self._post(payload)
 
         if response.status_code != 200:
             raise RuntimeError(
@@ -195,13 +211,8 @@ class OpenRouterValidationService:
         }
         
         try:
-            response = requests.post(
-                self.OPENROUTER_URL,
-                headers=self._headers,
-                json=payload,
-                timeout=self.TIMEOUT,
-            )
-            
+            response = self._post(payload)
+
             if response.status_code == 200:
                 response_data = response.json()
                 followup_content = response_data["choices"][0]["message"]["content"]
