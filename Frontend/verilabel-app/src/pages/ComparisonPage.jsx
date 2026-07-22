@@ -351,7 +351,7 @@ function FieldRow({ field, valA, valB, isDiff, highlight, deviation }) {
 
   return (
     <div
-      className={`grid grid-cols-[1fr_40px_1fr] gap-0 items-start transition-colors ${
+      className={`grid grid-cols-1 sm:grid-cols-[1fr_40px_1fr] gap-0 items-start transition-colors ${
         isDiff && highlight ? "bg-[#ffdcc7]/20" : ""
       }`}
     >
@@ -676,9 +676,9 @@ export default function ComparisonPage() {
       style={{ fontFamily: "Inter, sans-serif" }}
     >
       <Navbar />
-      <div className="flex h-[calc(100vh-72px)] overflow-hidden">
-        <main className="flex-1 flex flex-col overflow-hidden">
-          <div className="px-10 pt-8 pb-5 flex justify-between items-end shrink-0 border-b border-[#c1c7d2]/20 bg-[#f8f9ff]">
+      <div className="flex flex-col lg:flex-row overflow-visible lg:h-[calc(100vh-72px)] lg:overflow-hidden">
+        <main className="flex-1 flex flex-col overflow-visible lg:overflow-hidden">
+          <div className="px-4 sm:px-10 pt-6 sm:pt-8 pb-5 flex flex-col lg:flex-row lg:justify-between lg:items-end gap-4 shrink-0 border-b border-[#c1c7d2]/20 bg-[#f8f9ff]">
             <div>
               <div className="flex items-center gap-3 mb-1">
                 <span className="material-symbols-outlined text-[#004275]">difference</span>
@@ -698,7 +698,7 @@ export default function ComparisonPage() {
               </p>
             </div>
 
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center gap-3">
               <button
                 type="button"
                 onClick={() => setShowDiffOnly(!showDiffOnly)}
@@ -738,7 +738,7 @@ export default function ComparisonPage() {
           </div>
 
           {(errorMessage || statusMessage) && (
-            <div className="px-10 pt-4 shrink-0">
+            <div className="px-4 sm:px-10 pt-4 shrink-0">
               {errorMessage && (
                 <div className="rounded-lg border border-[#ba1a1a]/20 bg-[#ffdad6]/40 px-4 py-3 text-sm text-[#ba1a1a] mb-3">
                   {errorMessage}
@@ -752,8 +752,8 @@ export default function ComparisonPage() {
             </div>
           )}
 
-          <div className="flex-1 flex overflow-hidden">
-            <div className="flex-1 flex flex-col overflow-hidden px-10 py-6 gap-6">
+          <div className="flex-1 flex flex-col lg:flex-row overflow-visible lg:overflow-hidden">
+            <div className="flex-1 flex flex-col overflow-visible lg:overflow-hidden px-4 sm:px-10 py-6 gap-6">
               <div className="bg-white rounded-xl border border-[#c1c7d2]/20 p-5 shrink-0">
                 <div className="flex flex-wrap items-end gap-4">
                   <div className="flex-1 min-w-[260px]">
@@ -784,8 +784,8 @@ export default function ComparisonPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-[1fr_40px_1fr] gap-0 shrink-0">
-                <div className="bg-white rounded-l-xl border border-[#c1c7d2]/20 border-r-0 p-5">
+              <div className="grid grid-cols-1 sm:grid-cols-[1fr_40px_1fr] gap-0 shrink-0">
+                <div className="bg-white rounded-t-xl sm:rounded-l-xl sm:rounded-tr-none border border-[#c1c7d2]/20 sm:border-r-0 p-5">
                   <div className="flex items-start justify-between mb-3">
                     <div>
                       <span className="text-[10px] font-bold text-[#004275] uppercase tracking-widest mb-1 block">
@@ -835,16 +835,16 @@ export default function ComparisonPage() {
                   </div>
                 </div>
 
-                <div className="bg-[#004275] flex items-center justify-center">
+                <div className="bg-[#004275] flex items-center justify-center py-2 sm:py-0">
                   <span
-                    className="material-symbols-outlined text-white text-sm"
+                    className="material-symbols-outlined text-white text-sm rotate-90 sm:rotate-0"
                     style={{ fontVariationSettings: "'FILL' 1" }}
                   >
                     swap_horiz
                   </span>
                 </div>
 
-                <div className="bg-white rounded-r-xl border border-[#c1c7d2]/20 border-l-0 p-5">
+                <div className="bg-white rounded-b-xl sm:rounded-r-xl sm:rounded-bl-none border border-[#c1c7d2]/20 border-t-0 sm:border-t sm:border-l-0 p-5">
                   <div className="flex items-start justify-between mb-3">
                     <div>
                       <span className="text-[10px] font-bold text-[#6a3100] uppercase tracking-widest mb-1 block">
@@ -900,7 +900,7 @@ export default function ComparisonPage() {
                 </div>
               </div>
 
-              <div className="flex gap-1 bg-[#f0f4fd] rounded-lg p-1 w-fit shrink-0">
+              <div className="flex flex-wrap gap-1 bg-[#f0f4fd] rounded-lg p-1 shrink-0">
                 {["fields", "compliance", "audit"].map((tabName) => (
                   <button
                     key={tabName}
@@ -930,7 +930,7 @@ export default function ComparisonPage() {
 
                 {activeTab === "fields" && (
                   <div className="space-y-2">
-                    <div className="grid grid-cols-[1fr_40px_1fr] gap-0 mb-3">
+                    <div className="hidden sm:grid grid-cols-[1fr_40px_1fr] gap-0 mb-3">
                       <div className="flex items-center gap-2 px-3">
                         <span className="w-2 h-2 rounded-full bg-[#006970]" />
                         <span className="text-[11px] font-bold text-[#414750] uppercase tracking-widest">
@@ -952,7 +952,7 @@ export default function ComparisonPage() {
 
                       return (
                         <div key={field.key} className="rounded-xl overflow-hidden">
-                          <div className="grid grid-cols-[1fr_40px_1fr] gap-0">
+                          <div className="grid grid-cols-1 sm:grid-cols-[1fr_40px_1fr] gap-0">
                             <div className="px-3 pt-3 pb-1">
                               <p className="text-[10px] font-bold text-[#414750] uppercase tracking-widest flex items-center gap-1.5">
                                 {isDiff && (
@@ -965,12 +965,14 @@ export default function ComparisonPage() {
                                   />
                                 )}
                                 {field.label}
+                                <span className="sm:hidden normal-case text-[9px] text-[#006970]">· Reference</span>
                               </p>
                             </div>
                             <div />
                             <div className="px-3 pt-3 pb-1">
                               <p className="text-[10px] font-bold text-[#414750] uppercase tracking-widest">
                                 {field.label}
+                                <span className="sm:hidden normal-case text-[9px] text-[#6a3100] ml-1.5">· Incoming</span>
                               </p>
                             </div>
                           </div>
@@ -1005,7 +1007,7 @@ export default function ComparisonPage() {
                 )}
 
                 {activeTab === "compliance" && (
-                  <div className="grid grid-cols-2 gap-6">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                     {complianceCards.map(({ label, data, checks }) => (
                       <div key={label} className="bg-white rounded-xl p-6 shadow-sm">
                         <div className="flex items-center justify-between mb-5">
@@ -1068,7 +1070,7 @@ export default function ComparisonPage() {
                 )}
 
                 {activeTab === "audit" && (
-                  <div className="grid grid-cols-2 gap-6">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                     {auditCards.map((card) => (
                       <div key={card.id} className="bg-white rounded-xl p-6 shadow-sm">
                         <h3
@@ -1112,7 +1114,7 @@ export default function ComparisonPage() {
               </div>
             </div>
 
-            <div className="w-72 bg-white border-l border-[#c1c7d2]/20 flex flex-col overflow-y-auto shrink-0">
+            <div className="w-full lg:w-72 bg-white border-t lg:border-t-0 lg:border-l border-[#c1c7d2]/20 flex flex-col overflow-y-auto shrink-0">
               <div className="p-6 border-b border-[#c1c7d2]/10">
                 <h3 className="text-xs font-bold text-[#171c22] uppercase tracking-widest mb-4 flex items-center gap-2">
                   <span className="w-1 h-3 bg-[#004275] rounded-full" />

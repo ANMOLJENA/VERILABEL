@@ -288,10 +288,10 @@ export default function VerificationWorkspace() {
   return (
     <div className="bg-[#f8f9ff] text-[#171c22] font-['Inter']">
       <Navbar />
-      <div className="flex h-[calc(100vh-72px)] overflow-hidden">
+      <div className="flex overflow-visible md:h-[calc(100vh-72px)] md:overflow-hidden">
 
-        <main className="flex-1 flex flex-col md:flex-row overflow-hidden">
-          <section className="w-full md:w-1/2 bg-[#f8f9ff] flex flex-col p-8 space-y-6 overflow-y-auto">
+        <main className="flex-1 flex flex-col md:flex-row overflow-visible md:overflow-hidden">
+          <section className="w-full md:w-1/2 bg-[#f8f9ff] flex flex-col p-4 sm:p-8 space-y-6 overflow-y-auto">
             <header>
               <h1 className="font-['Public_Sans'] font-extrabold text-3xl tracking-tight text-[#004275]">
                 Verification Workspace
@@ -332,7 +332,7 @@ export default function VerificationWorkspace() {
                 setIsDragging(false);
               }}
               onDrop={onDrop}
-              className={`relative group border-2 border-dashed rounded-xl p-12 flex flex-col items-center justify-center transition-all cursor-pointer ${
+              className={`relative group border-2 border-dashed rounded-xl p-6 sm:p-12 flex flex-col items-center justify-center transition-all cursor-pointer ${
                 isDragging
                   ? "border-[#004275] bg-[#d2e4ff]/50"
                   : "border-[#c1c7d2]/40 hover:border-[#004275]/50 bg-[#f0f4fd]"
@@ -396,8 +396,8 @@ export default function VerificationWorkspace() {
             </div>
           </section>
 
-          <section className="w-full md:w-1/2 bg-[#f0f4fd] p-8 overflow-y-auto shadow-[-20px_0_40px_rgba(0,0,0,0.02)] z-10">
-            <div className="grid grid-cols-3 gap-4 mb-8">
+          <section className="w-full md:w-1/2 bg-[#f0f4fd] p-4 sm:p-8 overflow-y-auto shadow-[-20px_0_40px_rgba(0,0,0,0.02)] z-10">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
               <div className="bg-white p-4 rounded-xl shadow-sm border-b-2 border-[#006970]">
                 <p className="text-[10px] font-bold text-[#414750] uppercase tracking-tighter mb-2">
                   Confidence Score
@@ -514,11 +514,11 @@ export default function VerificationWorkspace() {
               </div>
             </div>
 
-            <div className="mt-8 flex gap-4">
+            <div className="mt-8 flex flex-col sm:flex-row gap-4">
               <button
                 type="button"
                 onClick={resetWorkspace}
-                className="flex-1 py-4 bg-[#dee3eb] text-[#171c22] font-bold text-xs uppercase tracking-widest rounded-lg hover:bg-[#dee3eb]/80 transition-colors"
+                className="w-full sm:flex-1 py-4 bg-[#dee3eb] text-[#171c22] font-bold text-xs uppercase tracking-widest rounded-lg hover:bg-[#dee3eb]/80 transition-colors"
               >
                 Discard Draft
               </button>
@@ -526,7 +526,7 @@ export default function VerificationWorkspace() {
                 type="button"
                 onClick={onFinalize}
                 disabled={!ocrResult || !validation || isSubmitting}
-                className="flex-[2] py-4 text-white font-bold text-xs uppercase tracking-widest rounded-lg shadow-xl shadow-[#004275]/20 hover:scale-[1.01] active:scale-[0.98] transition-all disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:scale-100"
+                className="w-full sm:flex-[2] py-4 text-white font-bold text-xs uppercase tracking-widest rounded-lg shadow-xl shadow-[#004275]/20 hover:scale-[1.01] active:scale-[0.98] transition-all disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:scale-100"
                 style={{ background: "linear-gradient(135deg, #004275 0%, #005a9c 100%)" }}
               >
                 {isSubmitting ? "Submitting..." : "Finalize & Submit Verification"}

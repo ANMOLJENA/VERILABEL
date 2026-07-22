@@ -322,13 +322,13 @@ function handleCompare(record) {
 
   return (
     <div
-      className="bg-[#f8f9ff] text-[#171c22] h-screen flex flex-col overflow-hidden"
+      className="bg-[#f8f9ff] text-[#171c22] min-h-screen md:h-screen flex flex-col overflow-visible md:overflow-hidden"
       style={{ fontFamily: "Inter, sans-serif" }}
     >
       <Navbar />
-      <div className="flex flex-1 overflow-hidden">
+      <div className="flex flex-1 overflow-visible md:overflow-hidden">
         <main className="flex-1 flex flex-col min-w-0 bg-[#f8f9ff]">
-          <div className="px-10 pt-10 pb-6 flex justify-between items-end">
+          <div className="px-4 sm:px-10 pt-6 sm:pt-10 pb-6 flex flex-col sm:flex-row sm:justify-between sm:items-end gap-4">
             <div>
               <h1
                 className="font-bold text-3xl text-[#171c22] tracking-tight mb-2"
@@ -340,7 +340,7 @@ function handleCompare(record) {
                 Reviewing {records.length} total extraction certificates
               </p>
             </div>
-            <div className="flex gap-3">
+            <div className="flex flex-wrap gap-3">
               <div className="flex bg-[#f0f4fd] rounded-lg p-1">
                 {["All", "Flagged", "Success"].map((value) => (
                   <button
@@ -367,7 +367,7 @@ function handleCompare(record) {
             </div>
           </div>
 
-          <div className="px-10 pb-3">
+          <div className="px-4 sm:px-10 pb-3">
             {errorMessage && (
               <div className="rounded-lg border border-[#ba1a1a]/20 bg-[#ffdad6]/40 px-4 py-3 text-sm text-[#ba1a1a]">
                 {errorMessage}
@@ -380,7 +380,7 @@ function handleCompare(record) {
             )}
           </div>
 
-          <div className="flex-1 flex overflow-hidden px-10 pb-10 gap-8">
+          <div className="flex-1 flex flex-col lg:flex-row overflow-visible lg:overflow-hidden px-4 sm:px-10 pb-10 gap-6 lg:gap-8">
             <div className="flex-1 flex flex-col bg-white rounded-xl shadow-sm overflow-hidden min-w-0">
               <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse">
@@ -466,7 +466,7 @@ function handleCompare(record) {
             </div>
 
             {selected && (
-              <div className="w-[420px] bg-white rounded-xl shadow-sm flex flex-col overflow-hidden shrink-0">
+              <div className="w-full lg:w-[420px] bg-white rounded-xl shadow-sm flex flex-col overflow-hidden shrink-0">
                 <div className="p-6 bg-[#f0f4fd]/50 flex justify-between items-start">
                   <div>
                     <span className="text-[10px] font-bold text-[#004275] uppercase tracking-widest mb-1 block">

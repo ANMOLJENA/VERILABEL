@@ -1,45 +1,77 @@
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+
+const NAV_LINKS = [
+  { label: 'Home', href: '/', active: true },
+  { label: 'Records', href: '/records' },
+  { label: 'Upload', href: '/upload' },
+];
 
 export default function LandingPage() {
   const navigate = useNavigate();
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   return (
     <div className="bg-[#f8f9ff] text-[#171c22] font-['Inter'] selection:bg-[#d2e4ff] selection:text-[#001c37]">
       {/* Navbar */}
-      <nav className="w-full top-0 z-50 bg-white shadow-sm flex justify-between items-center px-8 py-4 sticky">
-        <div className="flex items-center gap-8">
-          <span className="text-2xl font-bold text-[#004275] font-['Public_Sans'] tracking-tight">
-            VeriLabel
-          </span>
-          <div className="hidden md:flex gap-6">
-            {[
-              { label: 'Home', href: '/', active: true },
-              { label: 'Records', href: '/records' },
-              { label: 'Upload', href: '/upload' },
-            ].map(({ label, href, active }) => (
+      <nav className="w-full top-0 z-50 bg-white shadow-sm sticky">
+        <div className="flex justify-between items-center px-4 sm:px-8 py-4 gap-4">
+          <div className="flex items-center gap-8">
+            <span className="text-2xl font-bold text-[#004275] font-['Public_Sans'] tracking-tight">
+              VeriLabel
+            </span>
+            <div className="hidden md:flex gap-6">
+              {NAV_LINKS.map(({ label, href, active }) => (
+                <a
+                  key={label}
+                  href={href}
+                  className={`font-['Public_Sans'] font-semibold tracking-tight ${
+                    active
+                      ? 'text-[#004275] border-b-2 border-[#004275] pb-1'
+                      : 'text-[#414750] hover:text-[#004275] transition-colors'
+                  }`}
+                >
+                  {label}
+                </a>
+              ))}
+            </div>
+          </div>
+          <div className="flex items-center gap-2 sm:gap-4">
+            <button className="p-2 text-[#414750] hover:bg-[#f0f4fd] transition-colors rounded-full">
+              <span className="material-symbols-outlined">notifications</span>
+            </button>
+            <button className="hidden sm:flex items-center gap-2 p-1 pr-3 rounded-full hover:bg-[#f0f4fd] transition-colors">
+              <span className="material-symbols-outlined">account_circle</span>
+              <span className="text-sm font-medium">Compliance Officer</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setIsMenuOpen((open) => !open)}
+              className="md:hidden p-2 text-[#414750] hover:bg-[#f0f4fd] transition-colors rounded-full"
+              aria-label="Toggle navigation menu"
+              aria-expanded={isMenuOpen}
+            >
+              <span className="material-symbols-outlined">{isMenuOpen ? 'close' : 'menu'}</span>
+            </button>
+          </div>
+        </div>
+
+        {isMenuOpen && (
+          <div className="md:hidden border-t border-[#c1c7d2]/20 bg-white px-4 py-3 flex flex-col gap-1">
+            {NAV_LINKS.map(({ label, href, active }) => (
               <a
                 key={label}
                 href={href}
-                className={`font-['Public_Sans'] font-semibold tracking-tight ${
-                  active
-                    ? 'text-[#004275] border-b-2 border-[#004275] pb-1'
-                    : 'text-[#414750] hover:text-[#004275] transition-colors'
+                onClick={() => setIsMenuOpen(false)}
+                className={`px-3 py-3 rounded-lg font-['Public_Sans'] font-semibold tracking-tight ${
+                  active ? 'text-[#004275] bg-[#f0f4fd]' : 'text-[#414750] hover:text-[#004275] hover:bg-[#f0f4fd] transition-colors'
                 }`}
               >
                 {label}
               </a>
             ))}
           </div>
-        </div>
-        <div className="flex items-center gap-4">
-          <button className="p-2 text-[#414750] hover:bg-[#f0f4fd] transition-colors rounded-full">
-            <span className="material-symbols-outlined">notifications</span>
-          </button>
-          <button className="flex items-center gap-2 p-1 pr-3 rounded-full hover:bg-[#f0f4fd] transition-colors">
-            <span className="material-symbols-outlined">account_circle</span>
-            <span className="text-sm font-medium">Compliance Officer</span>
-          </button>
-        </div>
+        )}
       </nav>
 
       <main>

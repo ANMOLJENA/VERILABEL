@@ -22,7 +22,7 @@ export default function SecurityPortal() {
       </div>
 
       {/* Main Container */}
-      <main className="relative z-10 w-full max-w-screen-xl px-8 flex flex-col md:flex-row items-center gap-16">
+      <main className="relative z-10 w-full max-w-screen-xl px-4 sm:px-8 py-10 md:py-0 flex flex-col md:flex-row items-center gap-10 md:gap-16">
         {/* Left Column */}
         <div className="hidden md:flex flex-col flex-1 max-w-md">
           <div className="mb-12 flex items-center gap-2">
@@ -80,7 +80,7 @@ export default function SecurityPortal() {
           </div>
 
           {/* Login Card */}
-          <div className="w-full bg-white/80 backdrop-blur-[16px] rounded-xl p-10 shadow-[0px_12px_32px_rgba(23,28,34,0.06)] relative overflow-hidden">
+          <div className="w-full bg-white/80 backdrop-blur-[16px] rounded-xl p-6 sm:p-10 shadow-[0px_12px_32px_rgba(23,28,34,0.06)] relative overflow-hidden">
             <div className="mb-10">
               <h3 className="font-['Public_Sans'] text-2xl font-bold text-[#171c22] mb-2">
                 Portal Access
@@ -189,7 +189,7 @@ export default function SecurityPortal() {
           </div>
 
           {/* Footer Links */}
-          <div className="mt-8 flex gap-6">
+          <div className="mt-8 flex flex-wrap justify-center gap-4 sm:gap-6">
             {['Privacy Policy', 'Terms of Service', 'Trust Center'].map((link) => (
               <a
                 key={link}

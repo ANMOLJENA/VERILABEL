@@ -11,7 +11,7 @@ export default function Sidebar() {
   ];
 
   return (
-    <aside className="bg-[#f0f4fd] w-64 flex-shrink-0 flex flex-col py-6 h-full">
+    <aside className="hidden md:flex bg-[#f0f4fd] w-64 flex-shrink-0 flex-col py-6 h-full">
       <div className="px-6 mb-8">
         <div className="flex items-center gap-3 mb-4">
           <div className="w-10 h-10 rounded-lg bg-[#d2e4ff] flex items-center justify-center text-[#004275]">
