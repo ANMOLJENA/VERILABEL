@@ -1,14 +1,3 @@
-"""
-ocr_routes.py — Uses local Surya OCR service only.
-
-Changes:
-  1. Removed dependency on missing ocr_engine module
-  2. Uses SuryaOCRService directly for all OCR operations (in-process
-     torch models, no external Ollama server required)
-  3. Maintains same API endpoints for backward compatibility
-  4. Lazy initialization of Surya service (model weights load on first use)
-"""
-
 import logging
 import os
 import tempfile
@@ -18,13 +7,12 @@ from werkzeug.utils import secure_filename
 
 from configration.database import db
 from models.database import Document, OCRResult
-from services.surya_ocr_service import get_surya_service
+from services.rapid_ocr_service import get_rapid_service
 
 logger = logging.getLogger(__name__)
 
 bp = Blueprint("ocr", __name__, url_prefix="/api/ocr")
 
-# Allowed image extensions — PDFs are handled by /pdf endpoint only
 ALLOWED_IMAGE_EXTENSIONS = {"png", "jpg", "jpeg", "bmp", "tiff", "tif", "webp"}
 
 
@@ -65,7 +53,7 @@ def _persist_ocr_result(filename: str, ext: str, file_size: int, tmp_path: str, 
         document_id=document.id,
         extracted_text=extracted_text,
         translated_text=translated_text,
-        ocr_engine=result.get("ocr_engine", "surya"),
+        ocr_engine=result.get("ocr_engine", "rapidocr"),
         model_name=result.get("model_name"),
         processing_time=result.get("processing_time"),
     )
@@ -78,10 +66,6 @@ def _persist_ocr_result(filename: str, ext: str, file_size: int, tmp_path: str, 
     response_data["stored_file_path"] = document.file_path
     return response_data
 
-
-# ---------------------------------------------------------------------------
-# Endpoints
-# ---------------------------------------------------------------------------
 
 @bp.route("/image", methods=["POST"])
 def ocr_image():
@@ -112,7 +96,7 @@ def ocr_image():
             file.save(tmp.name)
             tmp_path = tmp.name
 
-        result = get_surya_service().process_image(tmp_path)
+        result = get_rapid_service().process_image(tmp_path)
         stored_result = _persist_ocr_result(filename, ext, file_size, tmp_path, result)
         return jsonify({"success": True, "data": stored_result}), 200
 
@@ -152,7 +136,7 @@ def ocr_pdf():
             file.save(tmp.name)
             tmp_path = tmp.name
 
-        result = get_surya_service().process_pdf(tmp_path)
+        result = get_rapid_service().process_pdf(tmp_path)
         stored_result = _persist_ocr_result(filename, "pdf", file_size, tmp_path, result)
         return jsonify({"success": True, "data": stored_result}), 200
 

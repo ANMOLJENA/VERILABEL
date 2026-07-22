@@ -30,7 +30,7 @@ from models.database import (
     ValidationResult,
 )
 from services.comparison_service import ComparisonService
-from services.surya_ocr_service import get_surya_service
+from services.rapid_ocr_service import get_rapid_service
 from services.openrouter_validation_service import OpenRouterValidationService
 from services.audit_service import AuditService
 
@@ -91,7 +91,7 @@ def _run_ocr(saved_path: str, suffix: str):
     """
     OCR wrapper based on file type.
     """
-    ocr_service = get_surya_service()
+    ocr_service = get_rapid_service()
     if suffix == ".pdf":
         return ocr_service.process_pdf(saved_path)
     return ocr_service.process_image(saved_path)
@@ -283,6 +283,7 @@ def verify(id):
 
     verification = AuditService.verify_record(
         {
+            "extracted_text": comparison.ocr_result.extracted_text,
             "match_percentage": comparison.match_percentage,
             "status": comparison.status,
             "final_decision": comparison.final_decision,

@@ -1,4 +1,8 @@
+import { useNavigate } from "react-router-dom";
+
 export default function LandingPage() {
+  const navigate = useNavigate();
+
   return (
     <div className="bg-[#f8f9ff] text-[#171c22] font-['Inter'] selection:bg-[#d2e4ff] selection:text-[#001c37]">
       {/* Navbar */}
@@ -62,12 +66,16 @@ export default function LandingPage() {
               </p>
               <div className="flex flex-wrap gap-4 pt-4">
                 <button
+                  onClick={() => navigate('/upload')}
                   className="text-white px-8 py-4 rounded-lg font-['Inter'] font-bold text-sm tracking-widest uppercase shadow-lg shadow-[#004275]/20 hover:scale-[1.02] transition-transform"
                   style={{ background: 'linear-gradient(135deg, #004275 0%, #005a9c 100%)' }}
                 >
                   Upload Medicine Label
                 </button>
-                <button className="bg-[#dee3eb] text-[#171c22] px-8 py-4 rounded-lg font-['Inter'] font-bold text-sm tracking-widest uppercase hover:bg-[#e4e8f1] transition-colors">
+                <button
+                  onClick={() => navigate('/records')}
+                  className="bg-[#dee3eb] text-[#171c22] px-8 py-4 rounded-lg font-['Inter'] font-bold text-sm tracking-widest uppercase hover:bg-[#e4e8f1] transition-colors"
+                >
                   My Records
                 </button>
               </div>
@@ -251,18 +259,13 @@ export default function LandingPage() {
         {/* Who It's For */}
         <section className="py-24 px-8 bg-[#f0f4fd]">
           <div className="max-w-7xl mx-auto">
-            <div className="flex flex-col md:flex-row justify-between items-end mb-16 gap-6">
-              <div className="max-w-xl">
-                <h2 className="text-3xl font-bold font-['Public_Sans'] mb-4">
-                  Trusted Across the Clinical Ecosystem
-                </h2>
-                <p className="text-[#414750]">
-                  A versatile solution tailored to the specific needs of healthcare stakeholders.
-                </p>
-              </div>
-              <button className="text-[#004275] font-bold tracking-widest uppercase text-sm border-b-2 border-[#004275]/20 hover:border-[#004275] transition-all pb-1">
-                View Case Studies
-              </button>
+            <div className="mb-16">
+              <h2 className="text-3xl font-bold font-['Public_Sans'] mb-4">
+                Trusted Across the Clinical Ecosystem
+              </h2>
+              <p className="text-[#414750]">
+                A versatile solution tailored to the specific needs of healthcare stakeholders.
+              </p>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               {[
@@ -304,93 +307,7 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* CTA */}
-        <section className="py-24 px-8 bg-[#f8f9ff]">
-          <div
-            className="max-w-5xl mx-auto rounded-2xl p-12 md:p-20 text-center text-white relative overflow-hidden"
-            style={{ background: 'linear-gradient(135deg, #004275 0%, #005a9c 100%)' }}
-          >
-            <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/2" />
-            <div className="relative z-10">
-              <h2 className="text-4xl font-bold font-['Public_Sans'] mb-6 tracking-tight">
-                Ready to Secure Your Compliance Workflow?
-              </h2>
-              <p className="text-[#afd1ff] text-lg mb-10 max-w-2xl mx-auto opacity-90">
-                Join leading healthcare institutions using VeriLabel for error-free data extraction.
-              </p>
-              <div className="flex flex-col sm:flex-row justify-center gap-4">
-                <button className="bg-white text-[#004275] px-10 py-4 rounded-lg font-['Inter'] font-bold text-sm tracking-widest uppercase hover:bg-[#f8f9ff] transition-colors">
-                  Start Free Trial
-                </button>
-                <button className="bg-[#005a9c] text-[#afd1ff] border border-[#afd1ff]/20 px-10 py-4 rounded-lg font-['Inter'] font-bold text-sm tracking-widest uppercase hover:bg-[#005a9c]/80 transition-colors">
-                  Request a Demo
-                </button>
-              </div>
-            </div>
-          </div>
-        </section>
       </main>
-
-      {/* Footer */}
-      <footer className="bg-white py-20 px-8">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-16">
-            <div className="space-y-6">
-              <span className="text-2xl font-bold text-[#004275] font-['Public_Sans'] tracking-tight">
-                VeriLabel
-              </span>
-              <p className="text-[#414750] text-sm leading-relaxed">
-                Ensuring pharmaceutical safety through clinical-grade label extraction and AI-powered
-                validation.
-              </p>
-            </div>
-            {[
-              {
-                heading: 'Platform',
-                links: ['Extraction Engine', 'Compliance API', 'Reporting Hub', 'Security Protocols'],
-              },
-              {
-                heading: 'Company',
-                links: ['Our Story', 'Clinical Partners', 'Press Kit', 'Careers'],
-              },
-              {
-                heading: 'Compliance',
-                links: ['HIPAA Policy', 'GDPR Compliance', 'Terms of Service', 'Audit Request'],
-              },
-            ].map(({ heading, links }) => (
-              <div key={heading}>
-                <h4 className="font-bold font-['Public_Sans'] mb-6 uppercase text-xs tracking-widest text-[#004275]">
-                  {heading}
-                </h4>
-                <ul className="space-y-4 text-sm text-[#414750]">
-                  {links.map((link) => (
-                    <li key={link}>
-                      <a href="#" className="hover:text-[#004275]">
-                        {link}
-                      </a>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
-          </div>
-          <div className="pt-12 border-t border-[#c1c7d2]/20 flex flex-col md:flex-row justify-between items-center gap-6">
-            <p className="text-xs text-[#727781]">
-              © 2024 VeriLabel Systems Inc. All rights reserved.
-            </p>
-            <div className="flex gap-6">
-              {['language', 'hub', 'terminal'].map((icon) => (
-                <span
-                  key={icon}
-                  className="material-symbols-outlined text-[#727781] hover:text-[#004275] cursor-pointer"
-                >
-                  {icon}
-                </span>
-              ))}
-            </div>
-          </div>
-        </div>
-      </footer>
     </div>
   );
 }

@@ -10,14 +10,4 @@ Pillow>=10.4,<12
 opencv-python>=4.10,<5
 numpy>=2.0,<3
 pdf2image>=1.17,<2
-
-# Classic Surya OCR (pre-"Surya 2" VLM rewrite) — in-process torch models,
-# no separate inference server required. Pin below 0.14 to avoid the
-# vLLM/llama.cpp-server-based rewrite.
-surya-ocr>=0.9,<0.14
-
-# surya-ocr 0.13.x's composite model configs (SuryaOCRConfig etc.) predate
-# transformers APIs added later (multi-text-config ambiguity checks in
-# get_text_config()) that break loading on very new transformers releases.
-# Pin to a release contemporaneous with surya-ocr's 0.13.x line.
-transformers>=4.41,<4.50
+rapidocr-onnxruntime>=1.3,<2

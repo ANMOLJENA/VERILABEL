@@ -8,8 +8,9 @@ Flask API for OCR extraction and medicine-label validation.
 - OpenRouter API key for structured validation
 - Optional on Windows: Poppler for PDF OCR
 
-OCR runs on Surya (in-process torch models — no separate server to start).
-Model weights download automatically on first use and are cached locally.
+OCR runs on RapidOCR (in-process ONNX Runtime models — no PyTorch, no GPU,
+no separate server to start, no first-use download; weights ship inside
+the package).
 
 ## Quick Start
 

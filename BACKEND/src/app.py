@@ -47,7 +47,7 @@ logger = logging.getLogger(__name__)
 
 
 # ── Step 3: Poppler path setup (Windows only, PDF processing) — needed to
-# rasterize PDF pages to images before running them through Surya OCR
+# rasterize PDF pages to images before running them through RapidOCR
 if platform.system() == "Windows":
     poppler_path = os.getenv("POPPLER_PATH")  # read from .env if set
 #if not found installes poppler
@@ -215,7 +215,7 @@ def save_api_json_response(response):
 
 
 # ── Step 9: OCR engine configuration ──────────────────────────────────────────
-# Using local Surya OCR (in-process torch models) only for text extraction
+# Using local RapidOCR (in-process ONNX Runtime models) only for text extraction
 
 
 # ── Routes defined directly in app.py ────────────────────────────────────────
@@ -231,7 +231,7 @@ def health_check():
     """
     return jsonify({
         "status":     "healthy",
-        "ocr_engine": "surya",  # Using local Surya OCR models
+        "ocr_engine": "rapidocr",
         "message":    "Label Verification API running",
     }), 200
 
