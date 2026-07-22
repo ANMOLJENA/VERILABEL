@@ -102,7 +102,7 @@ class OpenRouterValidationService:
         }
         self._conversation_messages = []
 
-    def _post(self, payload: dict) -> requests.Response:
+    def _post(self, payload: dict, _retry: bool = True) -> requests.Response:
         future = self._executor.submit(
             requests.post,
             self.OPENROUTER_URL,
@@ -112,10 +112,11 @@ class OpenRouterValidationService:
         )
         try:
             return future.result(timeout=self.TIMEOUT)
-        except FutureTimeoutError:
-            raise RuntimeError(f"OpenRouter API timed out after {self.TIMEOUT}s")
-        except requests.exceptions.Timeout:
-            raise RuntimeError(f"OpenRouter API timed out after {self.TIMEOUT}s")
+        except (FutureTimeoutError, requests.exceptions.Timeout):
+            if _retry:
+                logger.warning("OpenRouter request timed out after %ss, retrying once", self.TIMEOUT)
+                return self._post(payload, _retry=False)
+            raise RuntimeError(f"OpenRouter API timed out twice (after {self.TIMEOUT}s each)")
         except requests.exceptions.ConnectionError as exc:
             raise RuntimeError(f"Could not connect to OpenRouter API: {exc}") from exc
 
