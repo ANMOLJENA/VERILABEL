@@ -23,10 +23,12 @@ EXPOSE 5000
 
 WORKDIR /app/src
 
-# 2 workers: RapidOCR only needs ~50MB/worker (measured), so this stays well
-# under a 512MB host while meaning a slow OpenRouter call in one worker
-# doesn't take down health checks/OCR for the whole app. Timeout is above
-# the OpenRouter service's own 45s read timeout with headroom, since
-# requests' timeout guards against silent gaps, not total request duration —
-# a slow-but-progressing response can still run past 45s without tripping it.
-CMD ["sh", "-c", "gunicorn --bind 0.0.0.0:${PORT} --workers 2 --timeout 180 app:app"]
+# 1 worker + threads (not 2+ workers): RapidOCR loads its model per-process,
+# so extra workers would multiply memory on a small (e.g. 512MB) host and risk
+# an OOM kill mid-request. Threads share the one loaded model, and both the
+# OCR (ONNX Runtime) and the OpenRouter HTTP wait release the GIL, so threads
+# still give real concurrency — a slow validation call won't block health
+# checks or other OCR requests. Timeout has headroom over the OpenRouter
+# service's own 45s-per-attempt (with one retry) so a slow-but-progressing
+# response finishes instead of getting the whole worker killed.
+CMD ["sh", "-c", "gunicorn --bind 0.0.0.0:${PORT} --workers 1 --threads 4 --timeout 180 app:app"]

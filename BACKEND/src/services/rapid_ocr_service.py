@@ -16,6 +16,13 @@ _REC_MODEL_PATH = os.path.join(
     os.path.dirname(os.path.abspath(__file__)), "ocr_models", "en_PP-OCRv3_rec_infer.onnx"
 )
 
+# Cap the long edge of any input image before OCR. A raw phone photo can be
+# 3000-4000px, which makes RapidOCR both slow (more text regions to detect +
+# recognize) and memory-hungry (large intermediate arrays) — enough to time
+# out or OOM-kill the worker on a small hosting instance. 2000px keeps label
+# text comfortably legible while cutting both cost dramatically.
+_MAX_SIDE = 2000
+
 
 def _try_import_pdf2image():
     try:
@@ -98,12 +105,25 @@ class RapidOCRService:
         import cv2
         import numpy as np
 
+        image = self._downscale(image)
         bgr = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
         result, _ = self._engine(bgr)
         if not result:
             return ""
         lines = [entry[1].strip() for entry in result if entry[1] and entry[1].strip()]
         return "\n".join(lines)
+
+    @staticmethod
+    def _downscale(image):
+        from PIL import Image
+
+        longest = max(image.size)
+        if longest <= _MAX_SIDE:
+            return image
+        scale = _MAX_SIDE / longest
+        new_size = (round(image.width * scale), round(image.height * scale))
+        logger.info("Downscaling image from %s to %s for OCR", image.size, new_size)
+        return image.resize(new_size, Image.LANCZOS)
 
     @staticmethod
     def _find_poppler_path() -> Optional[str]:
